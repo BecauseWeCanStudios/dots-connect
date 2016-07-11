@@ -1,6 +1,5 @@
 "use strict";
 
-const sigma = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '"', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~'];
 const dx = [0, 1, 0, -1];
 const dy = [-1, 0, 1, 0];
 
@@ -33,6 +32,8 @@ function Generator () {
     this.print = function (table) {
         var width = table[0].length;
         var height = table.length;
+
+        this.flatten(table);
 
         var puzzle = new Array(height);
         for (let y = 0; y < height; ++y) {
@@ -234,3 +235,23 @@ function Generator () {
         return -alpha - 1;
     }
 }
+//debug
+
+// var gen = new Generator();
+// var res = gen.generate(6, 6);
+// var s = '';
+// for (let y = 0; y < res.puzzle.length; ++y) {
+//     for (let x = 0; x < res.puzzle[y].length; ++x) {
+//         s += res.puzzle[y][x].toString() + '\t';
+//     }
+//     s += '\n';
+// }
+// console.log(s);
+// s = '';
+// for (let y = 0; y < res.solution.length; ++y) {
+//     for (let x = 0; x < res.solution[y].length; ++x) {
+//         s += res.solution[y][x].toString() + '\t';
+//     }
+//     s += '\n';
+// }
+// console.log(s);
