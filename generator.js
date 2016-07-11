@@ -218,7 +218,7 @@ function Generator () {
     this.flatten = function (table) {
         var width = table[0].length;
         var height = table.length;
-        var alpha = -1;
+        var alpha = -2;
         for (let y = 0; y < height; ++y) {
             for (let x = 0; x < width; ++x) {
                 if (table[y][x] >= 0) {
