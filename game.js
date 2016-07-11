@@ -10,14 +10,6 @@ function penult(array) {
 }
 
 class Level {
-
-	var NodeTypes = {
-		ROAD: 0,
-		DOT: 1
-	};
-
-	var dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1];
-
 	static createNode(type, color) {
 		return {
 			type: type,
@@ -26,6 +18,12 @@ class Level {
 	}
 
 	constructor(field) {
+		this.NodeTypes = {
+			ROAD: 0,
+			DOT: 1
+		};
+		this.dx = [-1, 0, 1, 0];
+		this.dy = [0, -1, 0, 1];
 		this.field = new Array(field.length);
 		for (let i = 0; i < field.length; ++i) {
 			let row = new Array(field[i].length);
@@ -124,19 +122,20 @@ class Node {
 }
 
 class Game {
-
-	var presetLevels = [
+	constructor() {
+		this.presetLevels = [
 			[[1, 0, 0],
 			[0, 0, 0],
 			[0, 0, 1]]
 		];
-
-	constructor(view) {
-		this.view = view;
 		this.isMouseDown = false;
 		this.isGameFinished = false;
 		this.generator = new Generator();
 		this.levelWidth = this.levelHeight = 5;
+	}
+
+	setScene(scene) {
+		this.scene = scene;
 	}
 
 	changeLevelDimensions(width, height) {
