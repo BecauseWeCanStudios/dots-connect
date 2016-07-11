@@ -33,26 +33,18 @@ function Generator () {
     this.print = function (table) {
         var width = table[0].length;
         var height = table.length;
-        var colorsUsed = this.flatten(table);
-        if (colorsUsed > sigma.length)
-            throw "Error: Not enough printable characters to print the puzzle";
 
         var puzzle = new Array(height);
-        var solution = new Array(height);
-
         for (let y = 0; y < height; ++y) {
-            puzzle[y] = '';
-            solution[y] = '';
+            puzzle[y] = new Array(width);
             for (let x = 0; x < width; ++x) {
-                solution[y] += sigma[table[y][x]];
                 if (this.isFlowHead(x, y, table))
-                    puzzle[y] += sigma[table[y][x]];
+                    puzzle[y][x] = table[y][x];
                 else
-                    puzzle[y] += '.';
+                    puzzle[y][x] = 0;
             }
         }
-
-        return {puzzle: puzzle, solution: solution};
+        return {puzzle: puzzle, solution: table};
     };
 
     this.tile = function (width, height) {
@@ -61,7 +53,7 @@ function Generator () {
             table[y] = new Array(width);
         }
         // Start with simple vertical tiling
-        var alpha = 0;
+        var alpha = 1;
         for (let y = 0; y < height - 1; y += 2) {
             for (let x = 0; x < width; ++x) {
                 table[y][x] = alpha;
@@ -242,15 +234,3 @@ function Generator () {
         return -alpha - 1;
     }
 }
-
-//debug
-
-// var gen = new Generator();
-// var res = gen.generate(6, 6);
-// for (let i = 0; i < res.puzzle.length; ++i) {
-//     console.log(res.puzzle[i]);
-// }
-// console.log('\n');
-// for (let i = 0; i < res.solution.length; ++i) {
-//     console.log(res.solution[i]);
-// }
