@@ -119,17 +119,36 @@ class Node {
 
 class Game {
 
-	var blankLevel = [[1, 0, 0], [0, 0, 0], [0, 0, 1]];
+	var presetLevels = [
+			[[1, 0, 0],
+			[0, 0, 0],
+			[0, 0, 1]]
+		];
 
 	constructor(view) {
 		this.view = view;
 		this.isMouseDown = false;
 		this.isGameFinished = false;
+		this.generator = new Generator();
+		this.levelWidth = this.levelHeight = 5;
+	}
+
+	changeLevelDimensions(width, height) {
+		this.levelWidth = width;
+		this.levelHeight = height;
+	}
+
+	selectLevel(levelNumber) {
+		this.levelNumber = levelNumber;
 	}
 
 	startNewGame() {
 		this.isGameFinished = false;
-		this.level = new Level(this.blankLevel);
+		if (this.levelNumber < 0)
+			this.level = new Level(this.generator.generate(this.levelWidth, this.levelHeight));
+		else
+			this.level = new Level(this.presetLevels[this.levelNumber]);
+		//Invalidate view
 	}
 
 	startWay(x, y) {
