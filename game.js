@@ -1,7 +1,13 @@
 "use strict";
 
-Array.prototype.last = () => this[this.length - 1];
-Array.prototype.penult = () => this[this.length - 2];
+
+function last(array) {
+	return array[array.length - 1];
+}
+
+function penult(array) {
+	return array[array.length - 2];
+}
 
 class Level {
 
@@ -144,10 +150,9 @@ class Game {
 
 	startNewGame() {
 		this.isGameFinished = false;
-		if (this.levelNumber < 0)
-			this.level = new Level(this.generator.generate(this.levelWidth, this.levelHeight));
-		else
-			this.level = new Level(this.presetLevels[this.levelNumber]);
+		this.level = new Level(this.levelNumber < 0 ?
+			this.generator.generate(this.levelWidth, this.levelHeight) :
+			this.presetLevels[this.levelNumber]);
 		//Invalidate view
 	}
 
@@ -164,7 +169,7 @@ class Game {
 
 	continueWay(x, y) {
 		let color = this.level.nodeColor(x, y);
-		if (color && color != this.last().color)
+		if (color && color != last(this.field).color)
 			return false;
 		if (!color) {
 			this.level.placeColor(x, y, color);
@@ -173,7 +178,7 @@ class Game {
 		}
 		if (this.way.length == 1)
 			return false;
-		if (this.way.penult().x == x && this.way.penult().y == y) {
+		if (penult(this.way).x == x && penult(this.way).y == y) {
 			this.level.placeColor(this.way.back().x, this.way.back().y, 0);
 			this.way.pop();
 			return true;
