@@ -20,20 +20,30 @@ function randPerm(maxValue){
 class Generator {
 
     generate (width, height) {
+        const attempts = 10;
         if (width == 0 || height == 0 || width == 1 && height == 1)
             throw "Error: Requires bigger puzzle size";
-        var table = this.tile(width, height);
-        this.shuffle(table);
-        this.oddCorner(table);
-        this.findFlows(table);
-        return this.print(table);
+        var best_table;
+        var best = Infinity;
+        for (let i = 0; i < attempts; ++i) {
+            var table = this.tile(width, height);
+            this.shuffle(table);
+            this.oddCorner(table);
+            this.findFlows(table);
+            var degFactor = this.degenerationFactor(table);
+            if (degFactor < best) {
+                best_table = table.map(function(arr) {
+                    return arr.slice();
+                });
+                best = degFactor;
+            }
+        }
+        return this.print(best_table);
     };
 
     print (table) {
         var width = table[0].length;
         var height = table.length;
-
-        this.flatten(table);
 
         var puzzle = new Array(height);
         for (let y = 0; y < height; ++y) {
@@ -45,6 +55,10 @@ class Generator {
                     puzzle[y][x] = 0;
             }
         }
+        //attempt to fix degenerated segments is made
+        this.fixDegenerated(table, puzzle);
+        this.flatten(table);
+        this.flattenPuzzle(table, puzzle);
         return {puzzle: puzzle, solution: table};
     };
 
@@ -54,24 +68,24 @@ class Generator {
             table[y] = new Array(width);
         }
         // Start with simple vertical tiling
-        var alpha = 1;
+        var color = 1;
         for (let y = 0; y < height - 1; y += 2) {
             for (let x = 0; x < width; ++x) {
-                table[y][x] = alpha;
-                table[y + 1][x] = alpha;
-                ++alpha;
+                table[y][x] = color;
+                table[y + 1][x] = color;
+                ++color;
             }
         }
         // Add padding in case of odd height
         if (height % 2 == 1) {
             for (let x = 0; x < width - 1; x += 2) {
-                table[height - 1][x] = alpha;
-                table[height - 1][x + 1] = alpha;
-                ++alpha;
+                table[height - 1][x] = color;
+                table[height - 1][x + 1] = color;
+                ++color;
             }
             // In case of odd width, add a single in the corner.
             if (width % 2 == 1)
-                table[height - 1][width - 1] = alpha;
+                table[height - 1][width - 1] = color;
         }
         return table;
     };
@@ -186,16 +200,16 @@ class Generator {
         return true;
     };
     
-    fill (x, y, alpha, table) {
+    fill (x, y, color, table) {
         var width = table[0].length;
         var height = table.length;
         var orig = table[y][x];
-        table[y][x] = alpha;
+        table[y][x] = color;
         for (let i = 0; i < 4; i++) {
             var x1 = x + dx[i];
             var y1 = y + dy[i];
             if (this.inside(x1, y1, width, height) && table[y1][x1] == orig)
-                this.fill(x1, y1, alpha, table);
+                this.fill(x1, y1, color, table);
         }
     };
     
@@ -218,12 +232,12 @@ class Generator {
     flatten (table) {
         var width = table[0].length;
         var height = table.length;
-        var alpha = -2;
+        var color = -2;
         for (let y = 0; y < height; ++y) {
             for (let x = 0; x < width; ++x) {
                 if (table[y][x] >= 0) {
-                    this.fill(x, y, alpha, table);
-                    --alpha;
+                    this.fill(x, y, color, table);
+                    --color;
                 }
             }
         }
@@ -232,13 +246,95 @@ class Generator {
                 table[y][x] = -table[y][x] - 1;
             }
         }
-        return -alpha - 1;
+        return -color - 1;
+    }
+
+    degenerationFactor (table) {
+        var count = 0;
+        var width = table[0].length;
+        var height = table.length;
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                if (this.isFlowHead(x, y, table)) {
+                    for (let i = 0; i < 4; ++i) {
+                        let x1 = x + dx[i];
+                        let y1 = y + dy[i];
+                        if (this.inside(x1, y1, width, height) &&
+                            this.isFlowHead(x1, y1, table) && table[y][x] == table[y1][x1]
+                        )
+                            ++count;
+                    }
+                }
+            }
+        }
+        return Math.floor(count / 2);
+    }
+
+    //This function makes an attempt to partially fix degenerated segments
+    //It doesn't cover all the cases, but it probably covers the most often ones
+    //TODO: Refactor the code
+    fixDegenerated (solution, puzzle) {
+        var width = solution[0].length;
+        var height = solution.length;
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                if (this.isFlowHead(x, y, solution)) {
+                    for (let i = 0; i < 4; ++i) {
+                        let x1 = x + dx[i];
+                        let y1 = y + dy[i];
+                        if (this.inside(x1, y1, width, height) &&
+                            this.isFlowHead(x1, y1, solution) &&
+                            solution[y][x] == solution[y1][x1])
+                        {
+                            if (Math.abs(x - x1) == 1) {
+                                let dy1 = [1, -1];
+                                for (let j = 0; j < 2; ++ j) {
+                                    if (this.inside(x1, y1 + dy1[j], width, height) &&
+                                        solution[y1 + dy1[j]][x] == solution[y1 + dy1[j]][x1])
+                                    {
+                                        solution[y][x] = solution[y1 + dy1[j]][x];
+                                        solution[y1][x1] = solution[y1 + dy1[j]][x];
+                                        puzzle[y][x] = 0;
+                                        puzzle[y1][x1] = 0;
+                                    }
+                                }
+                            }
+                            if (Math.abs(y - y1) == 1) {
+                                let dx1 = [1, -1];
+                                for (let j = 0; j < 2; ++ j) {
+                                    if (this.inside(x1 + dx1[j], y1, width, height) &&
+                                        solution[y1][x1 + dx1[j]] == solution[y][x + dx1[j]])
+                                    {
+                                        solution[y][x] = solution[y][x + dx1[j]];
+                                        solution[y1][x1] = solution[y1][x1 + dx1[j]];
+                                        puzzle[y][x] = 0;
+                                        puzzle[y1][x1] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    flattenPuzzle (solution, puzzle) {
+        var width = solution[0].length;
+        var height = solution.length;
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                if (puzzle[y][x] != 0) {
+                    puzzle[y][x] = solution[y][x];
+                }
+            }
+        }
     }
 }
 //debug
 
 // var gen = new Generator();
-// var res = gen.generate(10, 10);
+// var res = gen.generate(6, 6);
 // var s = '';
 // for (let y = 0; y < res.puzzle.length; ++y) {
 //     for (let x = 0; x < res.puzzle[y].length; ++x) {
