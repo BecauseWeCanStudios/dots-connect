@@ -94,11 +94,11 @@ class Level {
 
 var presetLevels = [
 	    [[1, 0, 0],
-		[0, 0, 0],
-		[0, 0, 1]],
+		 [0, 0, 0],
+		 [0, 0, 1]],
 
 	    [[1, 0],
-		[0, 1]]
+		 [0, 1]]
 ];
 
 class Game {
@@ -163,16 +163,13 @@ class Game {
 		}
 		if (this.currentPath.length == 1)
 			return false;
-		if (color == this.currentPath[0].color) {
-			if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y))
-				return true;
-			while (this.currentPath.length > 1 && (last(this.currentPath).x != x || last(this.currentPath).y != y)) {
-				this.level.placeColor(last(this.currentPath).x, last(this.currentPath).y, 0);
-				this.currentPath.pop();
-			}
+		if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y))
 			return true;
+		while (this.currentPath.length > 1 && (last(this.currentPath).x != x || last(this.currentPath).y != y)) {
+			this.level.placeColor(last(this.currentPath).x, last(this.currentPath).y, 0);
+			this.currentPath.pop();
 		}
-		return false;
+		return true;
 	}
 
 	endPath(x, y) {
