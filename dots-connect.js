@@ -7,7 +7,7 @@ function init() {
 	playfield = document.getElementById('playfield');
     game = new Game();
     scene = new Gamefield(initSceneCanvas('main-scene'), game);
-    game.view = scene;
+    game.setScene(scene);
     game.selectLevel(-1);
     game.startNewGame();
 }
