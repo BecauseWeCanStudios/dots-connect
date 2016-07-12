@@ -8,26 +8,26 @@ function last(array) {
 var dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1];
 
 var NodeTypes = {
-    ROAD: 0,
-    DOT: 1
+	ROAD: 0,
+	DOT: 1
 };
 
 class Node {
 
-    constructor(type, color) {
-        this.type = type;
-        this.color = color;
-    }
+	constructor(type, color) {
+		this.type = type;
+		this.color = color;
+	}
 
 }
 
 class WayNode extends Node {
 
-    constructor(type, color, x, y) {
-        super(type, color);
-        this.x = x;
-        this.y = y;
-    }
+	constructor(type, color, x, y) {
+		super(type, color);
+		this.x = x;
+		this.y = y;
+	}
 }
 
 class Level {
@@ -40,7 +40,7 @@ class Level {
 				row[j] = new Node(field[i][j] ? NodeTypes.DOT : NodeTypes.ROAD, field[i][j]);
 			this.field[i] = row;
 		}
-        this.ways = [];
+		this.ways = [];
 	}
 
 	nodeColor(x, y) {
@@ -56,67 +56,57 @@ class Level {
 	}
 
 	dotsForColor(color) {
-        let result = [];
-        for (let i = 0; i < this.field.length; ++i)
-            for (let j = 0; j < this.field[i].length; ++j)
-                if (this.field[i][j].color == color && this.field[i][j].type == NodeTypes.DOT)
-                    result.push({x: j, y: i});
-        return result.length ? result : null;
-    }
-
-    wayIndex(color) {
-        for (let i = 0; i < this.ways.length; ++i)
-            if (this.ways[i][0].color == color)
-                return i;
-        return -1;
-    }
-
-    clearWay(color) {
-        let index = this.wayIndex(color);
-        if (index < 0)
-            return;
-        let way = this.ways[index];
-        if (!way)
-            return;
-        for (let i = 0; i < way.length; ++i)
-            if (way[i].type == NodeTypes.ROAD)
-                this.field[way[i].y][way[i].x].color = 0;
-        this.ways.splice(index, 1);
-    }
-
-	checkWay(color) {
-        let way = this.ways[this.wayIndex(color)];
-        return way && last(way).type == NodeTypes.DOT;
+		let result = [];
+		for (let i = 0; i < this.field.length; ++i)
+			for (let j = 0; j < this.field[i].length; ++j)
+				if (this.field[i][j].color == color && this.field[i][j].type == NodeTypes.DOT)
+					result.push({x: j, y: i});
+		return result.length ? result : null;
 	}
 
-    addWay(way) {
-        this.ways.push(way);
-    }
+	wayIndex(color) {
+		for (let i = 0; i < this.ways.length; ++i)
+			if (this.ways[i][0].color == color)
+				return i;
+		return -1;
+	}
+
+	clearWay(color) {
+		let index = this.wayIndex(color);
+		if (index < 0)
+			return;
+		let way = this.ways[index];
+		if (!way)
+			return;
+		for (let i = 0; i < way.length; ++i)
+			if (way[i].type == NodeTypes.ROAD)
+				this.field[way[i].y][way[i].x].color = 0;
+		this.ways.splice(index, 1);
+	}
+
+	checkWay(color) {
+		let way = this.ways[this.wayIndex(color)];
+		return way && last(way).type == NodeTypes.DOT;
+	}
+
+	addWay(way) {
+		this.ways.push(way);
+	}
 
 	checkAnswer() {
 		for (let i = 0; i < this.field.length; ++i)
 			for (let j = 0; j < this.field[i].length; ++j)
-				if (!temp[i][j].color || (this.canStartEnd(j, i) && !this.checkWay(this.field[i][j].color)))
+				if (!this.field[i][j].color || (this.canStartEnd(j, i) && !this.checkWay(this.field[i][j].color)))
 					return false;
 		return true;
 	}
 
-    nearDot(x, y) {
-        let color = this.nodeColor(x, y);
-        for (let i = 0; i < 4; ++i) {
-            let nx = x + dx[i], ny = y + dy[i];
-            let next = this.field[ny][nx];
-            if (next && next.type == NodeTypes.DOT && next.color == color)
-                return {x: nx, y: ny};
-        }
-        return null;
-    }
 }
 
 var presetLevels = [
-        [[1, 0, 0],
-        [0, 0, 0],
-        [0, 0, 1]]
+		[[1, 0, 0],
+		[0, 0, 0],
+		[0, 0, 1]]
 ];
 
 class Game {
@@ -156,33 +146,42 @@ class Game {
 		return true;
 	}
 
+	canContinue(x, y) {
+		for (let i = 0; i < 4; ++i) {
+			let nx = x + dx[i], ny = y = dy[i];
+			if (nx == last(this.way).x && ny == last(this.way).y)
+				return true;
+		}
+		return false;
+	}
+
 	continueWay(x, y) {
 		let color = this.level.nodeColor(x, y);
 		if (color && color != last(this.field).color)
 			return false;
 		if (!color) {
+			if (!this.canContinue(x, y))
+				return false;
 			this.level.placeColor(x, y, color);
 			this.way.push(new WayNode(NodeTypes.ROAD, color, x, y));
 			return true;
 		}
 		if (this.way.length == 1)
 			return false;
-        if (color == this.way[0].color) {
-            while (this.way.length > 1 && last(this.way).x != x && last(this.way).y != y ) {
-                this.level.placeColor(last(this.way).x, last(this.way).y, 0);
-                this.way.pop();
-            }
-            return true;
-        }
+		if (color == this.way[0].color) {
+			while (this.way.length > 1 && last(this.way).x != x && last(this.way).y != y ) {
+				this.level.placeColor(last(this.way).x, last(this.way).y, 0);
+				this.way.pop();
+			}
+			return true;
+		}
 		return false;
 	}
 
-	endWay() {
-        let node = this.level.nearDot(last(this.way).x, last(this.way).y);
-        if (node) {
-            this.way.push(new WayNode(NodeTypes.DOT, this.way[0].color, node.x, node.y));
-            this.level.addWay(this.way);
-        }
+	endWay(x, y) {
+		if (last(this.way).x != x && last(this.way).y != y && this.canContinue(x, y))
+			this.way.push(new WayNode(NodeTypes.DOT, this.way[0].color, x, y));
+		this.level.addWay(this.way);
 		this.way = [];
 	}
 
@@ -204,7 +203,7 @@ class Game {
 			this.isGameFinished = true;
 			//Invalidate view
 		}
+		this.endWay(x, y);
 		this.isMouseDown = false;
-		this.endWay();
 	}
 }
