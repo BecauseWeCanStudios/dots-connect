@@ -17,6 +17,12 @@ function randPerm(maxValue){
     return permArray;
 }
 
+function copy2DArray (toCopy) {
+    return toCopy.map(function(arr) {
+        return arr.slice();
+    });
+}
+
 class Generator {
 
     generate (width, height) {
@@ -32,9 +38,7 @@ class Generator {
             this.findFlows(table);
             var degFactor = this.degenerationFactor(table);
             if (degFactor < best) {
-                best_table = table.map(function(arr) {
-                    return arr.slice();
-                });
+                best_table = copy2DArray(table);
                 best = degFactor;
             }
         }
@@ -55,11 +59,14 @@ class Generator {
                     puzzle[y][x] = 0;
             }
         }
+        var flows = {};
+        this.recordFlows(table, puzzle, flows);
         //attempt to fix degenerated segments is made
-        this.fixDegenerated(table, puzzle);
+        this.fixDegenerated(table, puzzle, flows);
         this.flatten(table);
         this.flattenPuzzle(table, puzzle);
-        return {puzzle: puzzle, solution: table};
+        flows = this.flattenFlows(table, flows);
+        return {puzzle: puzzle, solution: table, flows: flows};
     };
 
     tile (width, height) {
@@ -272,8 +279,8 @@ class Generator {
 
     //This function makes an attempt to partially fix degenerated segments
     //It doesn't cover all the cases, but it probably covers the most often ones
-    //TODO: Refactor the code
-    fixDegenerated (solution, puzzle) {
+    //It also applies according fixes to the flows needed for output
+    fixDegenerated (solution, puzzle, flows) {
         var width = solution[0].length;
         var height = solution.length;
         for (let y = 0; y < height; ++y) {
@@ -287,34 +294,87 @@ class Generator {
                             solution[y][x] == solution[y1][x1])
                         {
                             if (Math.abs(x - x1) == 1) {
-                                let dy1 = [1, -1];
-                                for (let j = 0; j < 2; ++ j) {
-                                    if (this.inside(x1, y1 + dy1[j], width, height) &&
-                                        solution[y1 + dy1[j]][x] == solution[y1 + dy1[j]][x1])
-                                    {
-                                        solution[y][x] = solution[y1 + dy1[j]][x];
-                                        solution[y1][x1] = solution[y1 + dy1[j]][x];
-                                        puzzle[y][x] = 0;
-                                        puzzle[y1][x1] = 0;
-                                    }
-                                }
+                                this.fixHorizontalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
                             }
                             if (Math.abs(y - y1) == 1) {
-                                let dx1 = [1, -1];
-                                for (let j = 0; j < 2; ++ j) {
-                                    if (this.inside(x1 + dx1[j], y1, width, height) &&
-                                        solution[y1][x1 + dx1[j]] == solution[y][x + dx1[j]])
-                                    {
-                                        solution[y][x] = solution[y][x + dx1[j]];
-                                        solution[y1][x1] = solution[y1][x1 + dx1[j]];
-                                        puzzle[y][x] = 0;
-                                        puzzle[y1][x1] = 0;
-                                    }
-                                }
+                                this.fixVerticalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    //Probably the next two functions must be merged into one
+    fixVerticalCase(x1, y1, width, height, solution, x, y, flows, puzzle) {
+        let dx1 = [1, -1];
+        for (let j = 0; j < 2; ++j) {
+            if (this.inside(x1 + dx1[j], y1, width, height) &&
+                solution[y1][x1 + dx1[j]] == solution[y][x + dx1[j]]) {
+                let color = solution[y][x + dx1[j]];
+                //This must not happen, but just in case it happens...
+                if (flows[color] === undefined) {
+                    console.log('Undefined color was met while fixing vertical case');
+                    return;
+                }
+                let i1 = flows[color].findIndex(
+                    (element, i, a) => {
+                        return element.x == x + dx1[j] &&
+                            element.y == y;
+                    });
+                let i2 = flows[color].findIndex(
+                    (element, i, a) => {
+                        return element.x == x1 + dx1[j] &&
+                            element.y == y1;
+                    });
+                if (i1 > i2) {
+                    flows[color].splice(i1, 0, {x: x1, y: y1}, {x: x, y: y});
+                }
+                else {
+                    flows[color].splice(i2, 0, {x: x, y: y}, {x: x1, y: y1});
+                }
+                delete flows[solution[y][x]];
+                solution[y][x] = color;
+                solution[y1][x1] = color;
+                puzzle[y][x] = 0;
+                puzzle[y1][x1] = 0;
+            }
+        }
+    }
+
+    fixHorizontalCase(x1, y1, width, height, solution, x, y, flows, puzzle) {
+        let dy1 = [1, -1];
+        for (let j = 0; j < 2; ++j) {
+            if (this.inside(x1, y1 + dy1[j], width, height) &&
+                solution[y + dy1[j]][x] == solution[y1 + dy1[j]][x1]) {
+                let color = solution[y1 + dy1[j]][x];
+                //This must not happen, but just in case it happens...
+                if (flows[color] === undefined) {
+                    console.log('Undefined color was met while fixing horizontal case');
+                    return;
+                }
+                let i1 = flows[color].findIndex(
+                    (element, i, a) => {
+                        return element.x == x &&
+                            element.y == y + dy1[j];
+                    });
+                let i2 = flows[color].findIndex(
+                    (element, i, a) => {
+                        return element.x == x1 &&
+                            element.y == y1 + dy1[j];
+                    });
+                if (i1 > i2) {
+                    flows[color].splice(i1, 0, {x: x1, y: y1}, {x: x, y: y});
+                }
+                else {
+                    flows[color].splice(i2, 0, {x: x, y: y}, {x: x1, y: y1});
+                }
+                delete flows[solution[y][x]];
+                solution[y][x] = color;
+                solution[y1][x1] = color;
+                puzzle[y][x] = 0;
+                puzzle[y1][x1] = 0;
             }
         }
     }
@@ -329,6 +389,44 @@ class Generator {
                 }
             }
         }
+    }
+
+    recordFlows (solution, puzzle, flows) {
+        var width = solution[0].length;
+        var height = solution.length;
+        var table = copy2DArray(solution);
+        for (let y = 0; y < height; ++y) {
+            for (let x = 0; x < width; ++x) {
+                if (puzzle[y][x] != 0 && table[y][x] != -1) {
+                    flows[puzzle[y][x]] = [];
+                    this.dfs(puzzle[y][x], table, x, y, flows[puzzle[y][x]]);
+                }
+            }
+        }
+    }
+
+    dfs (color, table, x, y, flow) {
+        var width = table[0].length;
+        var height = table.length;
+        if (!this.inside(x, y, width, height) || table[y][x] != color) {
+            return;
+        }
+        flow.push({x: x, y: y});
+        table[y][x] = -1;
+        for (let i = 0; i < 4; ++i) {
+            this.dfs(color, table, x + dx[i], y + dy[i], flow);
+        }
+    }
+
+    flattenFlows (solution, flows) {
+        var newFlows = {};
+        var oldKeys = Object.keys(flows).slice();
+        for (let i = 0; i < oldKeys.length; ++i) {
+            var start = flows[oldKeys[i]][0];
+            var newKey = solution[start.y][start.x];
+            newFlows[newKey] = flows[oldKeys[i]];
+        }
+        return newFlows;
     }
 }
 //debug
