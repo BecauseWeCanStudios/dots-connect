@@ -21,7 +21,7 @@ class Node {
 
 }
 
-class WayNode extends Node {
+class PathNode extends Node {
 
 	constructor(type, color, x, y) {
 		super(type, color);
@@ -46,7 +46,7 @@ class Level {
 				row[j] = new Node(field[i][j] ? NodeTypes.DOT : NodeTypes.ROAD, field[i][j]);
 			this.field[i] = row;
 		}
-		this.ways = [];
+		this.paths = [];
 	}
 
 	nodeColor(x, y) {
@@ -70,39 +70,39 @@ class Level {
 		return result.length ? result : null;
 	}
 
-	wayIndex(color) {
-		for (let i = 0; i < this.ways.length; ++i)
-			if (this.ways[i][0].color == color)
+	pathIndex(color) {
+		for (let i = 0; i < this.paths.length; ++i)
+			if (this.paths[i][0].color == color)
 				return i;
 		return -1;
 	}
 
-	clearWay(color) {
-		let index = this.wayIndex(color);
+	clearPath(color) {
+		let index = this.pathIndex(color);
 		if (index < 0)
 			return;
-		let way = this.ways[index];
-		if (!way)
+		let path = this.paths[index];
+		if (!path)
 			return;
-		for (let i = 0; i < way.length; ++i)
-			if (way[i].type == NodeTypes.ROAD)
-				this.field[way[i].y][way[i].x].color = 0;
-		this.ways.splice(index, 1);
+		for (let i = 0; i < path.length; ++i)
+			if (path[i].type == NodeTypes.ROAD)
+				this.field[path[i].y][path[i].x].color = 0;
+		this.paths.splice(index, 1);
 	}
 
-	checkWay(color) {
-		let way = this.ways[this.wayIndex(color)];
-		return way && last(way).type == NodeTypes.DOT;
+	checkPath(color) {
+		let path = this.paths[this.pathIndex(color)];
+		return path && last(path).type == NodeTypes.DOT;
 	}
 
-	addWay(way) {
-		this.ways.push(way);
+	addPath(path) {
+		this.paths.push(path);
 	}
 
 	checkAnswer() {
 		for (let i = 0; i < this.field.length; ++i)
 			for (let j = 0; j < this.field[i].length; ++j)
-				if (!this.field[i][j].color || (this.canStartEnd(j, i) && !this.checkWay(this.field[i][j].color)))
+				if (!this.field[i][j].color || (this.canStartEnd(j, i) && !this.checkPath(this.field[i][j].color)))
 					return false;
 		return true;
 	}
@@ -110,11 +110,11 @@ class Level {
 }
 
 var presetLevels = [
-	[[1, 0, 0],
+	    [[1, 0, 0],
 		[0, 0, 0],
 		[0, 0, 1]],
 
-	[[1, 0],
+	    [[1, 0],
 		[0, 1]]
 ];
 
@@ -126,11 +126,11 @@ class Game {
 		this.generator = new Generator();
 		this.levelWidth = this.levelHeight = 5;
 		this.levelNumber = 0;
-		this.way = [];
+		this.currentPath = [];
 	}
 
 	setScene(scene) {
-		this.view = scene;
+		this.scene = scene;
 	}
 
 	changeLevelDimensions(width, height) {
@@ -144,79 +144,80 @@ class Game {
 
 	startNewGame() {
 		this.isGameFinished = false;
-		this.way = [];
+		this.currentPath = [];
 		this.level = new Level(this.levelNumber < 0 ?
 			this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
 			presetLevels[this.levelNumber]);
-		this.view.initLevel(this.level);
+		this.scene.initLevel(this.level);
 	}
 
-	startWay(x, y) {
+	startPath(x, y) {
 		let color = this.level.nodeColor(x, y);
-		this.level.clearWay(color);
-		this.way.push(new WayNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y));
+		this.level.clearPath(color);
+		this.currentPath.push(new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y));
 		return true;
 	}
 
 	canContinue(x, y) {
 		for (let i = 0; i < 4; ++i) {
 			let nx = x + dx[i], ny = y + dy[i];
-			if (nx == last(this.way).x && ny == last(this.way).y)
+			if (nx == last(this.currentPath).x && ny == last(this.currentPath).y)
 				return true;
 		}
 		return false;
 	}
 
-	continueWay(x, y) {
+	continuePath(x, y) {
 		let color = this.level.nodeColor(x, y);
-		if (color && color != last(this.way).color)
+		if (color && color != last(this.currentPath).color)
 			return false;
 		if (!color) {
 			if (!this.canContinue(x, y))
 				return false;
-			this.level.placeColor(x, y, this.way[0].color);
-			this.way.push(new WayNode(NodeTypes.ROAD, this.way[0].color, x, y));
+			this.level.placeColor(x, y, this.currentPath[0].color);
+			this.currentPath.push(new PathNode(NodeTypes.ROAD, this.currentPath[0].color, x, y));
 			return true;
 		}
-		if (this.way.length == 1)
+		if (this.currentPath.length == 1)
 			return false;
-		if (color == this.way[0].color) {
-			if (this.level.canStartEnd(x, y) && (x != this.way[0].x || y != this.way[0].y))
+		if (color == this.currentPath[0].color) {
+			if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y))
 				return true;
-			while (this.way.length > 1 && (last(this.way).x != x || last(this.way).y != y)) {
-				this.level.placeColor(last(this.way).x, last(this.way).y, 0);
-				this.way.pop();
+			while (this.currentPath.length > 1 && (last(this.currentPath).x != x || last(this.currentPath).y != y)) {
+				this.level.placeColor(last(this.currentPath).x, last(this.currentPath).y, 0);
+				this.currentPath.pop();
 			}
 			return true;
 		}
 		return false;
 	}
 
-	endWay(x, y) {
-		if ((last(this.way).x != x && last(this.way).y != y || this.level.canStartEnd(x, y)) && this.canContinue(x, y))
-			this.way.push(new WayNode(NodeTypes.DOT, this.way[0].color, x, y));
-		this.level.addWay(this.way);
-		this.way = [];
+	endPath(x, y) {
+		if ((last(this.currentPath).x != x && 
+            last(this.currentPath).y != y || this.level.canStartEnd(x, y)) && this.canContinue(x, y))
+			this.currentPath.push(new PathNode(NodeTypes.DOT, this.currentPath[0].color, x, y));
+		this.level.addPath(this.currentPath);
+		this.currentPath = [];
 	}
 
 	fieldMouseDown(x, y) {
-		if (!this.isGameFinished && this.level.canStartEnd(x, y) && this.startWay(x, y)) {
+		if (!this.isGameFinished && this.level.canStartEnd(x, y) && this.startPath(x, y)) {
 			this.isMouseDown = true;
-			this.view.updateLevel();
+			this.scene.updateLevel();
 		}
 	}
 
 	fieldMouseMove(x, y) {
-		if (this.isMouseDown && this.continueWay(x, y)) {
-			this.view.updateLevel();
+		if (this.isMouseDown && this.continuePath(x, y)) {
+			this.scene.updateLevel();
 		}
 	}
 
 	fieldMouseUp(x, y) {
-		this.endWay(x, y);
+		this.endPath(x, y);
 		if (this.level.canStartEnd(x, y) && this.level.checkAnswer()) {
 			this.isGameFinished = true;
-			this.view.updateLevel();
+			this.scene.updateLevel();
 			window.alert('YOU WON!!!');
 		}
 		this.isMouseDown = false;
