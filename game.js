@@ -169,8 +169,10 @@ class Game {
 		}
 		if (this.currentPath.length == 1)
 			return false;
-		if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y))
-			return true;
+		if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y)) {
+            this.currentPath.push(new PathNode(NodeTypes.DOT, this.currentPath[0].color, x, y));
+            return true;
+        }
 		while (this.currentPath.length > 1 && (last(this.currentPath).x != x || last(this.currentPath).y != y)) {
 			this.level.placeColor(last(this.currentPath).x, last(this.currentPath).y, 0);
 			this.currentPath.pop();
@@ -178,10 +180,7 @@ class Game {
 		return true;
 	}
 
-	endPath(x, y) {
-		if ((last(this.currentPath).x != x && 
-            last(this.currentPath).y != y || this.level.canStartEnd(x, y)) && this.canContinue(x, y))
-			this.currentPath.push(new PathNode(NodeTypes.DOT, this.currentPath[0].color, x, y));
+	endPath() {
 		this.level.addPath(this.currentPath);
 		this.currentPath = [];
 	}
@@ -200,7 +199,7 @@ class Game {
 	}
 
 	fieldMouseUp(x, y) {
-		this.endPath(x, y);
+		this.endPath();
 		if (this.level.canStartEnd(x, y) && this.level.checkAnswer()) {
 			this.isGameFinished = true;
 			this.scene.updateLevel();
