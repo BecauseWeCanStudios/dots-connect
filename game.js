@@ -5,7 +5,7 @@ function last(array) {
 	return array[array.length - 1];
 }
 
-var dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1];
+//var dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1];
 
 var NodeTypes = {
 	ROAD: 0,
@@ -104,9 +104,12 @@ class Level {
 }
 
 var presetLevels = [
-		[[1, 0, 0],
+	[[1, 0, 0],
 		[0, 0, 0],
-		[0, 0, 1]]
+		[0, 0, 1]],
+
+	[[1, 0],
+		[0, 1]]
 ];
 
 class Game {
@@ -117,6 +120,8 @@ class Game {
 		this.isGameFinished = false;
 		this.generator = new Generator();
 		this.levelWidth = this.levelHeight = 5;
+		this.levelNumber = 0;
+		this.way = [];
 	}
 
 	changeLevelDimensions(width, height) {
@@ -130,17 +135,15 @@ class Game {
 
 	startNewGame() {
 		this.isGameFinished = false;
+		this.way = [];
 		this.level = new Level(this.levelNumber < 0 ?
-			this.generator.generate(this.levelWidth, this.levelHeight) :
+			this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
 			presetLevels[this.levelNumber]);
-		//Invalidate view
+		//Inv
 	}
 
 	startWay(x, y) {
 		let color = this.level.nodeColor(x, y);
-		let dots = this.level.dotsForColor(color);
-		if (!dots)
-			return false;
 		this.level.clearWay(color);
 		this.way.push(new WayNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y));
 		return true;
@@ -148,7 +151,7 @@ class Game {
 
 	canContinue(x, y) {
 		for (let i = 0; i < 4; ++i) {
-			let nx = x + dx[i], ny = y = dy[i];
+			let nx = x + dx[i], ny = y + dy[i];
 			if (nx == last(this.way).x && ny == last(this.way).y)
 				return true;
 		}
@@ -157,19 +160,21 @@ class Game {
 
 	continueWay(x, y) {
 		let color = this.level.nodeColor(x, y);
-		if (color && color != last(this.field).color)
+		if (color && color != last(this.way).color)
 			return false;
 		if (!color) {
 			if (!this.canContinue(x, y))
 				return false;
-			this.level.placeColor(x, y, color);
-			this.way.push(new WayNode(NodeTypes.ROAD, color, x, y));
+			this.level.placeColor(x, y, this.way[0].color);
+			this.way.push(new WayNode(NodeTypes.ROAD, this.way[0].color, x, y));
 			return true;
 		}
 		if (this.way.length == 1)
 			return false;
 		if (color == this.way[0].color) {
-			while (this.way.length > 1 && last(this.way).x != x && last(this.way).y != y ) {
+			if (this.level.canStartEnd(x, y))
+				return true;
+			while (this.way.length > 1 && (last(this.way).x != x || last(this.way).y != y)) {
 				this.level.placeColor(last(this.way).x, last(this.way).y, 0);
 				this.way.pop();
 			}
@@ -179,7 +184,7 @@ class Game {
 	}
 
 	endWay(x, y) {
-		if (last(this.way).x != x && last(this.way).y != y && this.canContinue(x, y))
+		if ((last(this.way).x != x && last(this.way).y != y || this.level.canStartEnd(x, y)) && this.canContinue(x, y))
 			this.way.push(new WayNode(NodeTypes.DOT, this.way[0].color, x, y));
 		this.level.addWay(this.way);
 		this.way = [];
@@ -188,22 +193,22 @@ class Game {
 	fieldMouseDown(x, y) {
 		if (!this.isGameFinished && this.level.canStartEnd(x, y) && this.startWay(x, y)) {
 			this.isMouseDown = true;
-			//Invalidate view
+			//Inv
 		}
 	}
 
 	fieldMouseMove(x, y) {
 		if (this.isMouseDown && this.continueWay(x, y)) {
-			//Invalidate view
+			//Inv
 		}
 	}
 
 	fieldMouseUp(x, y) {
+		this.endWay(x, y);
 		if (this.level.canStartEnd(x, y) && this.level.checkAnswer()) {
 			this.isGameFinished = true;
-			//Invalidate view
+			//Inv
 		}
-		this.endWay(x, y);
 		this.isMouseDown = false;
 	}
 }
