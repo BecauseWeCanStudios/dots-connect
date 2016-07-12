@@ -97,8 +97,14 @@ var presetLevels = [
 		 [0, 0, 0],
 		 [0, 0, 1]],
 
-	    [[1, 0],
-		 [0, 1]]
+	    [[1, 0, 2],
+		 [0, 0, 0],
+         [1, 2, 0]],  
+    
+        [[1, 0, 0, 0],
+         [2, 0, 3, 1],
+         [0, 0, 4, 0],
+         [2, 0, 3, 4]]
 ];
 
 class Game {
@@ -128,7 +134,7 @@ class Game {
 	startNewGame() {
 		this.isGameFinished = false;
 		this.currentPath = [];
-		this.level = new Level(this.levelNumber < 0 ?
+		this.level = new Level(this.levelNumber >= presetLevels.length ?
 			this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
 			presetLevels[this.levelNumber]);
 		this.scene.initLevel(this.level);

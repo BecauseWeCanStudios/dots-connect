@@ -2,14 +2,17 @@
 var playfield;
 var scene;
 var game;
+var menu;
 
 function init() {
 	playfield = document.getElementById('playfield');
+    playfield.style.width = playfield.style.height = (Math.min(window.innerHeight, window.innerWidth) * 0.8 | 0) + 'px';
     game = new Game();
-    scene = new Gamefield(initSceneCanvas('main-scene'), game);
-    game.setScene(scene);
-    game.selectLevel(-1);
-    game.startNewGame();
+    menu = new Menu(playfield, game);
+    //scene = new Gamefield(initSceneCanvas('main-scene'), game);
+    //game.setScene(scene);
+    //game.selectLevel(-1);
+    //game.startNewGame();
 }
 
 function initSceneCanvas(name) {
