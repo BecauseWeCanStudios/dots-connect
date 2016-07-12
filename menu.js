@@ -87,7 +87,8 @@ class Menu {
     }
 
     backButtonClick() {
-        console.log(this.state);
+        if (this.isClicked) return;
+        this.isClicked = true;
         switch (this.state) {
             case MenuStates.MAIN_MENU:
                 return;
@@ -100,16 +101,19 @@ class Menu {
                 this.game.scene.canvas.remove();
                 //GameField destroy
                 this.createLevelButtons();
+                this.isClicked = false;
                 this.state -= 1;
         }
     }
     
     menuDivTransitionEnd() {
+        this.isClicked = false;
         this.menuDiv.remove();
         this.createLevelButtons();
     }
 
     buttonsDivTransitionEnd() {
+        this.isClicked = false;
         this.levelButtonsDiv.remove();
         if (this.state == MenuStates.GAME)
             this.startGame();
@@ -124,6 +128,8 @@ class Menu {
     }
 
     levelButtonClick(event) {
+        if (this.isClicked) return;
+        this.isClicked = true;
         this.state = MenuStates.GAME;
         this.currentLevel = Number(event.target.id);
         this.levelButtonsDiv.style.opacity = 0;
@@ -157,6 +163,8 @@ class Menu {
     }
 
     newGameClick() {
+        if (this.isClicked) return;
+        this.isClicked = true;
         this.state = MenuStates.LEVEL_SELECT;
         this.createBackButton();
         this.menuDiv.style.opacity = 0;
