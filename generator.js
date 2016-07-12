@@ -17,9 +17,9 @@ function randPerm(maxValue){
     return permArray;
 }
 
-function Generator () {
+class Generator {
 
-    this.generate = function (width, height) {
+    generate (width, height) {
         if (width == 0 || height == 0 || width == 1 && height == 1)
             throw "Error: Requires bigger puzzle size";
         var table = this.tile(width, height);
@@ -29,7 +29,7 @@ function Generator () {
         return this.print(table);
     };
 
-    this.print = function (table) {
+    print (table) {
         var width = table[0].length;
         var height = table.length;
 
@@ -48,7 +48,7 @@ function Generator () {
         return {puzzle: puzzle, solution: table};
     };
 
-    this.tile = function (width, height) {
+    tile (width, height) {
         var table = new Array(height);
         for (let y = 0; y < height; ++y) {
             table[y] = new Array(width);
@@ -76,7 +76,7 @@ function Generator () {
         return table;
     };
 
-    this.shuffle = function (table) {
+    shuffle (table) {
         var width = table[0].length;
         var height = table.length;
         if (width == 1 || height == 1)
@@ -101,7 +101,7 @@ function Generator () {
         }
     };
 
-    this.oddCorner = function (table) {
+    oddCorner (table) {
         var width = table[0].length;
         var height = table.length;
         if (width % 2 == 1 && height % 2 == 1) {
@@ -117,7 +117,7 @@ function Generator () {
         }
     };
 
-    this.findFlows = function (table) {
+    findFlows (table) {
         var width = table[0].length;
         var height = table.length;
         var perm = randPerm(width * height);
@@ -129,7 +129,7 @@ function Generator () {
         }
     };
 
-    this.isFlowHead = function (x, y, table) {
+    isFlowHead (x, y, table) {
         var width = table[0].length;
         var height = table.length;
         var degree = 0;
@@ -142,11 +142,11 @@ function Generator () {
         return degree < 2;
     };
     
-    this.inside = function (x, y, width, height) {
+    inside (x, y, width, height) {
         return 0 <= x && x < width && 0 <= y && y < height;
     };
 
-    this.layFlow = function (x, y, table) {
+    layFlow (x, y, table) {
         var width = table[0].length;
         var height = table.length;
         var perm = randPerm(4);
@@ -162,7 +162,7 @@ function Generator () {
         }
     };
 
-    this.canConnect = function (x1, y1, x2, y2, table) {
+    canConnect (x1, y1, x2, y2, table) {
         var width = table[0].length;
         var height = table.length;
         if (table[y1][x1] == table[y2][x2])
@@ -186,7 +186,7 @@ function Generator () {
         return true;
     };
     
-    this.fill = function (x, y, alpha, table) {
+    fill (x, y, alpha, table) {
         var width = table[0].length;
         var height = table.length;
         var orig = table[y][x];
@@ -199,7 +199,7 @@ function Generator () {
         }
     };
     
-    this.follow = function (x, y, x0, y0, table) {
+    follow (x, y, x0, y0, table) {
         var width = table[0].length;
         var height = table.length;
         for (let i = 0; i < 4; ++i) {
@@ -215,10 +215,10 @@ function Generator () {
         return {x: x, y: y};
     };
 
-    this.flatten = function (table) {
+    flatten (table) {
         var width = table[0].length;
         var height = table.length;
-        var alpha = -1;
+        var alpha = -2;
         for (let y = 0; y < height; ++y) {
             for (let x = 0; x < width; ++x) {
                 if (table[y][x] >= 0) {
@@ -238,7 +238,7 @@ function Generator () {
 //debug
 
 // var gen = new Generator();
-// var res = gen.generate(6, 6);
+// var res = gen.generate(10, 10);
 // var s = '';
 // for (let y = 0; y < res.puzzle.length; ++y) {
 //     for (let x = 0; x < res.puzzle[y].length; ++x) {
