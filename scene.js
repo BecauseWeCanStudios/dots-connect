@@ -1,3 +1,7 @@
+function isDef(o) {
+    return typeof(o) != 'undefined';
+}
+
 class Drawable {
     constructor(x, y) {
         this.x = x;
@@ -155,28 +159,35 @@ class Grid extends Drawable {
         this.cellSize = cellSize;
         this.gridSize = gridSize;
         this.cells = [];
+        this.cellType = cellType;
         for (let i = 0; i < gridSize * gridSize; i++) {
             this.cells[i] = new cellType(this, x, y, i % gridSize, (i / gridSize | 0), cellSize, cellSize);
         }
     }
 
+    getElementId(col, row) {
+        return row * this.gridSize + col;
+    }
+
     getElement(col, row) {
-        return this.cells[row * cellSize + col];
+        return this.cells[this.getElementId(col, row)];
+    }
+
+    getCenter(col, row) {
+        return [this.x + this.cellSize * col + this.cellSize / 2 | 0,
+                this.y + this.cellSize * row + this.cellSize / 2 | 0];
     }
 
     forceRedraw(col, row) {
-        if (typeof(col) != 'undefined' && typeof(row) != 'undefined') {
-            console.log('FR ' + col + ' ' + row);
+        if (isDef(col) && isDef(row)) {
             this.cells[this.gridSize * row + col].dirty = true;
             return;
         }
-        if (typeof(col) != 'undefined') {
-            console.log('FR ' + col);
+        if (isDef(col)) {
             this.cells[col].dirty = true;
             return;
         }
         for (let i = 0; i < this.cells.length; i++) {
-            console.log('FR FULLREDRAW');
             this.cells[i].dirty = true;
         }
     }
@@ -264,21 +275,16 @@ class NodeTile extends Tile {
 
 }
 
-class NodePathTile extends NodeTile {
-    constructor(grid, ix, iy, col, row, w, h, id) {
-        super(grid, ix, iy, col, row, w, h, id);
-        this.radius = w / 4 | 0;
-    }
-}
-
 class NodesGrid extends Grid {
-    constructor(x, y, gridSize, cellSize, cellTypeNode, cellTypePath, level) {
+    constructor(x, y, gridSize, cellSize, cellType, level) {
         super(x, y);
-        this.cellTypeNode = cellTypeNode;
-        this.cellTypePath = cellTypePath;
+        this.cellType = cellType;
         this.cellSize = cellSize;
         this.gridSize = gridSize;
+        this.level = level;
         this.cells = [];
+        this.dirtyPaths = [];
+        this.currentState = {};
         this.colorCodes = ['(255, 0, 0)', '(0, 255, 0)', '(0, 0, 255)', '(255, 255, 0)', '(255, 0, 255)',
             '(0, 255, 255)', '(125, 0, 0)', '(0, 125, 0)', '(0, 0, 125)', '(125, 125, 0)'];
         this.initLevel(level);
@@ -287,37 +293,113 @@ class NodesGrid extends Grid {
     initLevel(level) {
         for (let i = 0; i < level.length; i++) {
             for (let j = 0; j < level[i].length; j++) {
-                var node;
-                if (level[i][j].type == NodeTypes.DOT) {
-                    node = this.cellTypeNode;
-                } else {
-                    node = this.cellTypePath;
-                }
-                node = new node(this, this.x, this.y, j, i,
+                this.cells[i * this.gridSize + j] = new this.cellType(this, this.x, this.y, j, i,
                     this.cellSize, this.cellSize, level[i][j].color);
-                this.cells[i * this.gridSize + j] = node;
             }
         }
         console.log(level);
     }
 
-    updateLevel(level) {
+    updateLevel(level, gm) {
         // TODO Grid size checks
-        let changed = [];
+        var changed = [];
         let amt = 0;
-        for (let i = 0; i < level.length; i++) {
+        /*for (let i = 0; i < level.length; i++) {
             for (let j = 0; j < level[i].length; j++) {
                 let ind = i * this.gridSize + j;
-                //if (this.cells[ind].nodeId != level[j][i].color) {
+                if (this.cells[ind].nodeId != level[i][j].color) {
                     this.cells[ind].nodeId = level[i][j].color;
-                //changed[amt] = ind;
-                    //amt++;
-                    console.log('redraw');
+                    changed[amt] = ind;
+                    amt++;
                     this.forceRedraw(ind);
-                //}
+                }
+            }
+        }*/
+        let curPath = gm.currentPath;
+        console.log(curPath);
+        let prevPath = this.currentState.prevPath;
+        if (curPath.length == 0 || (isDef(this.currentState.color) && this.currentState.color != curPath[0].color)) {
+            this.currentState = {};
+            if (isDef(this.level.paths))
+            {
+                this.dirtyPaths[this.level.paths.length - 1] = false;
             }
         }
+        else if (curPath.length > 1 && (isDef(prevPath) && curPath.length != prevPath.length)) {
+            if (curPath.length > prevPath.length) {
+                this.currentState.newNodes = curPath.length - prevPath.length;
+                if (curPath.length > 2) {
+                    this.currentState.newNodes++;
+                }
+                this.currentState.dirty = true;
+            } else {
+                for (let i = prevPath.length - 1; i >= curPath.length - 1; i--) {
+                    if (prevPath[i].type == NodeTypes.ROAD) {
+                        changed[changed.length] = this.getElementId(prevPath[i].x, prevPath[i].y);
+                    }
+                }
+                this.currentState.newNodes = 1; // Redraw latest element
+                this.currentState.dirty = true
+            }
+            this.currentState.prevPath = curPath.slice();
+        }
+        else if (curPath.length == 1 && (!isDef(this.currentState.color))) {
+            this.currentState.color = curPath[0].color;
+            this.currentState.dirty = false; // Nothing to draw yet
+            this.currentState.prevPath = curPath.slice();
+        }
         return changed;
+    }
+
+    drawPath(context, path) {
+        let prevStroke = context.strokeStyle;
+        let prevLineW = context.lineWidth;
+        let prevLineC = context.lineCap;
+        context.strokeStyle = 'rgb' + this.colorCodes[path[0].color - 1];
+        context.lineWidth = '10';
+        context.lineCap = 'round';
+
+        console.log('drawPath');
+
+        let orientation = undefined;
+        let prevCenter = this.getCenter(path[0].x, path[0].y);
+        for (let i = 1; i <= path.length; i++) {
+            let newOrientation = (isDef(path[i]) && path[i - 1].x - path[i].x == 0) ? 1 : 2;
+            if (newOrientation != orientation || i == path.length) {
+                context.beginPath();
+                context.moveTo(prevCenter[0], prevCenter[1]);
+                let curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
+                context.lineTo(curCenter[0], curCenter[1]);
+                context.stroke();
+                orientation = newOrientation;
+                prevCenter = curCenter;
+            }
+        }
+
+        context.strokeStyle = prevStroke;
+        context.lineWidth = prevLineW;
+        context.lineCap = prevLineC;
+        return true;
+    }
+
+    render(context, frame, timestamp) {
+        super.render(context, frame, timestamp);
+        if (isDef(this.level.paths)) {
+            for (let i = 0; i < this.level.paths.length; i++) {
+                if (isDef(this.dirtyPaths[i]) && this.dirtyPaths[i]) {
+                    this.drawPath(context, this.level.paths[i]);
+                    this.dirtyPaths[i] = false;
+                }
+            }
+        }
+
+        if (!isDef(this.currentState.color) || !this.currentState.dirty) {
+            return;
+        }
+        let p = this.currentState.prevPath;
+        let rerender = p.slice(p.length - this.currentState.newNodes - 1, p.length);
+        this.drawPath(context, rerender);
+        this.currentState.dirty = false;
     }
 }
 
@@ -330,28 +412,38 @@ class Gamefield extends Scene{
         this.currentLevel = level;
         this.background = new Grid(100, 100, level.field.length, 32, BackgroundTile);
         this.addObject(this.background);
-        this.foreground = new NodesGrid(100, 100, level.field.length, 32, NodeTile, NodePathTile, level.field);
+        this.foreground = new NodesGrid(100, 100, level.field.length, 32, NodeTile, level.field);
         this.addObject(this.foreground);
     }
 
     updateLevel() {
-        return this.updateLevel(this.currentLevel.field);
+        return this.updateLevel(this.currentLevel);
     }
 
     updateLevel(level) {
-        //let changed = this.foreground.updateLevel(this.currentLevel.field);
-        /*for (let i = 0; i < changed.length; i++) {
-            this.background.forceRedraw(i);
-        }*/
-        this.foreground.updateLevel(this.currentLevel.field);
-        this.background.forceRedraw();
+        let changed = this.foreground.updateLevel(this.currentLevel, this.gm);
+        for (let i = 0; i < changed.length; i++) {
+            this.background.forceRedraw(changed[i]);
+        }
+    }
+
+    clearPath(path) {
+        if (!path) {
+            return;
+        }
+        for (let i = 0; i < path.length; i++) {
+            if (path[i].type == NodeTypes.ROAD) {
+                this.background.forceRedraw(path[i].x, path[i].y);
+            }
+        }
     }
 
     checkBound(clientX, clientY) {
-        if (clientX < 100 || clientX > 100 + this.foreground.gridSize * 32) {
-            return false;
-        }
-        if (clientY < 100 || clientY > 100 + this.foreground.gridSize * 32) {
+        if (clientX < this.foreground.x ||
+            clientX > this.foreground.x + this.foreground.gridSize * this.foreground.cellSize ||
+            clientY < this.foreground.y ||
+            clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize)
+        {
             return false;
         }
         return true;
@@ -372,7 +464,8 @@ class Gamefield extends Scene{
         if (!this.checkBound(clientX, clientY)) {
             return;
         }
-        this.gm.fieldMouseUp((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
+        this.gm.fieldMouseUp((clientX - this.background.x) / this.background.cellSize | 0,
+            (clientY - this.background.y) / this.background.cellSize | 0);
     }
 
     onMouseMove(e) {
@@ -382,6 +475,7 @@ class Gamefield extends Scene{
         if (!this.checkBound(clientX, clientY)) {
             return;
         }
-        this.gm.fieldMouseMove((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
+        this.gm.fieldMouseMove((clientX - this.background.x) / this.background.cellSize | 0,
+            (clientY - this.background.y) / this.background.cellSize | 0);
     }
-}
+}}
