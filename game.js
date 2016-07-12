@@ -5,8 +5,6 @@ function last(array) {
 	return array[array.length - 1];
 }
 
-//var dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1];
-
 var NodeTypes = {
 	ROAD: 0,
 	DOT: 1
@@ -33,12 +31,6 @@ class PathNode extends Node {
 class Level {
 
 	constructor(field) {
-		this.NodeTypes = {
-			ROAD: 0,
-			DOT: 1
-		};
-		this.dx = [-1, 0, 1, 0];
-		this.dy = [0, -1, 0, 1];
 		this.field = new Array(field.length);
 		for (let i = 0; i < field.length; ++i) {
 			let row = new Array(field[i].length);
@@ -59,15 +51,6 @@ class Level {
 
 	canStartEnd(x, y) {
 		return this.field[y][x].type == NodeTypes.DOT;
-	}
-
-	dotsForColor(color) {
-		let result = [];
-		for (let i = 0; i < this.field.length; ++i)
-			for (let j = 0; j < this.field[i].length; ++j)
-				if (this.field[i][j].color == color && this.field[i][j].type == NodeTypes.DOT)
-					result.push({x: j, y: i});
-		return result.length ? result : null;
 	}
 
 	pathIndex(color) {
