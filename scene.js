@@ -165,15 +165,18 @@ class Grid extends Drawable {
     }
 
     forceRedraw(col, row) {
-        if (col && row) {
+        if (typeof(col) != 'undefined' && typeof(row) != 'undefined') {
+            console.log('FR ' + col + ' ' + row);
             this.cells[this.gridSize * row + col].dirty = true;
             return;
         }
-        if (col) {
+        if (typeof(col) != 'undefined') {
+            console.log('FR ' + col);
             this.cells[col].dirty = true;
             return;
         }
         for (let i = 0; i < this.cells.length; i++) {
+            console.log('FR FULLREDRAW');
             this.cells[i].dirty = true;
         }
     }
@@ -243,6 +246,7 @@ class NodeTile extends Tile {
     constructor(grid, ix, iy, col, row, w, h, id) {
         super(grid, ix, iy, col, row, w, h);
         this.nodeId = id;
+        this.radius = w / 2 | 0;
     }
 
     render(context, frame, timestamp) {
@@ -253,29 +257,48 @@ class NodeTile extends Tile {
         let centerX = this.x + (this.w / 2 | 0);
         let centerY = this.y + (this.h / 2 | 0);
         context.beginPath();
-        context.arc(centerX, centerY, (this.w / 3 | 0), 0, Math.PI * 2);
+        context.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
         context.fill();
         this.dirty = false;
     }
 
 }
 
+class NodePathTile extends NodeTile {
+    constructor(grid, ix, iy, col, row, w, h, id) {
+        super(grid, ix, iy, col, row, w, h, id);
+        this.radius = w / 4 | 0;
+    }
+}
+
 class NodesGrid extends Grid {
-    constructor(x, y, gridSize, cellSize, cellType, level) {
+    constructor(x, y, gridSize, cellSize, cellTypeNode, cellTypePath, level) {
         super(x, y);
-        this.cellType = cellType;
+        this.cellTypeNode = cellTypeNode;
+        this.cellTypePath = cellTypePath;
         this.cellSize = cellSize;
         this.gridSize = gridSize;
         this.cells = [];
-        this.colorCodes = ['(255, 0, 0)', '(0, 255, 0)', '(0, 0, 255)'];
+        this.colorCodes = ['(255, 0, 0)', '(0, 255, 0)', '(0, 0, 255)', '(255, 255, 0)', '(255, 0, 255)',
+            '(0, 255, 255)', '(125, 0, 0)', '(0, 125, 0)', '(0, 0, 125)', '(125, 125, 0)'];
         this.initLevel(level);
     }
 
     initLevel(level) {
         for (let i = 0; i < level.length; i++) {
-            this.cells[i] = new this.cellType(this, this.x, this.y, i % this.gridSize, (i / this.gridSize | 0),
-                this.cellSize, this.cellSize, level[i]);
+            for (let j = 0; j < level[i].length; j++) {
+                var node;
+                if (level[i][j].type == NodeTypes.DOT) {
+                    node = this.cellTypeNode;
+                } else {
+                    node = this.cellTypePath;
+                }
+                node = new node(this, this.x, this.y, j, i,
+                    this.cellSize, this.cellSize, level[i][j].color);
+                this.cells[i * this.gridSize + j] = node;
+            }
         }
+        console.log(level);
     }
 
     updateLevel(level) {
@@ -283,11 +306,15 @@ class NodesGrid extends Grid {
         let changed = [];
         let amt = 0;
         for (let i = 0; i < level.length; i++) {
-            if (this.cells[i].nodeId != level[i]) {
-                this.cells[i].nodeId = level[i];
-                changed[amt] = i;
-                amt++;
-                this.forceRedraw(i);
+            for (let j = 0; j < level[i].length; j++) {
+                let ind = i * this.gridSize + j;
+                //if (this.cells[ind].nodeId != level[j][i].color) {
+                    this.cells[ind].nodeId = level[i][j].color;
+                //changed[amt] = ind;
+                    //amt++;
+                    console.log('redraw');
+                    this.forceRedraw(ind);
+                //}
             }
         }
         return changed;
@@ -297,20 +324,64 @@ class NodesGrid extends Grid {
 class Gamefield extends Scene{
     constructor(canvasElement, gameManager) {
         super(canvasElement, gameManager);
-        this.background = new Grid(100, 100, 4, 32, BackgroundTile);
-        this.addObject(this.background);
-        this.foreground = new NodesGrid(100, 100, 4, 32, NodeTile, [0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0]);
-        this.addObject(this.foreground);
     }
 
     initLevel(level) {
-        // TODO
+        this.currentLevel = level;
+        this.background = new Grid(100, 100, level.field.length, 32, BackgroundTile);
+        this.addObject(this.background);
+        this.foreground = new NodesGrid(100, 100, level.field.length, 32, NodeTile, NodePathTile, level.field);
+        this.addObject(this.foreground);
+    }
+
+    updateLevel() {
+        return this.updateLevel(this.currentLevel.field);
     }
 
     updateLevel(level) {
-        let changed = this.foreground.updateLevel(level);
-        for (let i = 0; i < changed.length; i++) {
+        //let changed = this.foreground.updateLevel(this.currentLevel.field);
+        /*for (let i = 0; i < changed.length; i++) {
             this.background.forceRedraw(i);
+        }*/
+        this.foreground.updateLevel(this.currentLevel.field);
+        this.background.forceRedraw();
+    }
+
+    checkBound(clientX, clientY) {
+        if (clientX < 100 || clientX > 100 + this.foreground.gridSize * 32) {
+            return false;
         }
+        if (clientY < 100 || clientY > 100 + this.foreground.gridSize * 32) {
+            return false;
+        }
+        return true;
+    }
+
+    onMouseDown(e) {
+        let clientX = e.clientX - this.canvas.offsetLeft;
+        let clientY = e.clientY - this.canvas.offsetTop;
+        if (!this.checkBound(clientX, clientY)) {
+            return;
+        }
+        this.gm.fieldMouseDown((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
+    }
+
+    onMouseUp(e) {
+        let clientX = e.clientX - this.canvas.offsetLeft;
+        let clientY = e.clientY - this.canvas.offsetTop;
+        if (!this.checkBound(clientX, clientY)) {
+            return;
+        }
+        this.gm.fieldMouseUp((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
+    }
+
+    onMouseMove(e) {
+        super.onMouseMove(e);
+        let clientX = e.clientX - this.canvas.offsetLeft;
+        let clientY = e.clientY - this.canvas.offsetTop;
+        if (!this.checkBound(clientX, clientY)) {
+            return;
+        }
+        this.gm.fieldMouseMove((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
     }
 }

@@ -1,11 +1,15 @@
 "use strict";
 var playfield;
 var scene;
+var game;
 
 function init() {
 	playfield = document.getElementById('playfield');
-    var game = new Game();
+    game = new Game();
     scene = new Gamefield(initSceneCanvas('main-scene'), game);
+    game.view = scene;
+    game.selectLevel(-1);
+    game.startNewGame();
 }
 
 function initSceneCanvas(name) {

@@ -120,8 +120,7 @@ var presetLevels = [
 
 class Game {
 
-	constructor(view) {
-		this.view = view;
+	constructor() {
 		this.isMouseDown = false;
 		this.isGameFinished = false;
 		this.generator = new Generator();
@@ -131,7 +130,7 @@ class Game {
 	}
 
 	setScene(scene) {
-		this.scene = scene;
+		this.view = scene;
 	}
 
 	changeLevelDimensions(width, height) {
@@ -149,7 +148,7 @@ class Game {
 		this.level = new Level(this.levelNumber < 0 ?
 			this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
 			presetLevels[this.levelNumber]);
-		//Inv
+		this.view.initLevel(this.level);
 	}
 
 	startWay(x, y) {
@@ -182,7 +181,7 @@ class Game {
 		if (this.way.length == 1)
 			return false;
 		if (color == this.way[0].color) {
-			if (this.level.canStartEnd(x, y))
+			if (this.level.canStartEnd(x, y) && (x != this.way[0].x || y != this.way[0].y))
 				return true;
 			while (this.way.length > 1 && (last(this.way).x != x || last(this.way).y != y)) {
 				this.level.placeColor(last(this.way).x, last(this.way).y, 0);
@@ -203,13 +202,13 @@ class Game {
 	fieldMouseDown(x, y) {
 		if (!this.isGameFinished && this.level.canStartEnd(x, y) && this.startWay(x, y)) {
 			this.isMouseDown = true;
-			//Inv
+			this.view.updateLevel();
 		}
 	}
 
 	fieldMouseMove(x, y) {
 		if (this.isMouseDown && this.continueWay(x, y)) {
-			//Inv
+			this.view.updateLevel();
 		}
 	}
 
@@ -217,7 +216,8 @@ class Game {
 		this.endWay(x, y);
 		if (this.level.canStartEnd(x, y) && this.level.checkAnswer()) {
 			this.isGameFinished = true;
-			//Inv
+			this.view.updateLevel();
+			window.alert('YOU WON!!!');
 		}
 		this.isMouseDown = false;
 	}
