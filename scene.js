@@ -386,13 +386,13 @@ class NodesGrid extends Grid {
         let curCenter = this.getCenter(path[0].x, path[0].y);
         if (path.length > 1) {
             context.beginPath();
-            context.moveTo(curCenter[0], curCenter[1]);
+            context.moveTo(curCenter[0] + 0.5, curCenter[1] + 0.5);
             for (let i = 1; i <= path.length; i++) {
                 let newOrientation = (isDef(path[i]) && path[i - 1].x - path[i].x == 0) ? 1 : 2;
                 if (newOrientation != orientation || i == path.length) {
                     console.log(context.lineCap);
                     curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
-                    context.lineTo(curCenter[0], curCenter[1]);
+                    context.lineTo(curCenter[0] + 0.5, curCenter[1] + 0.5);
                     orientation = newOrientation;
                 }
             }
