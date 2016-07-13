@@ -201,7 +201,7 @@ class Game {
             this.isMouseDown = false;
             this.currentPath = [];
             this.scene.updateLevel();
-            window.alert('YOU WON!!!');
+            $('header').style = '';
         }
         this.isMouseDown = false;
     }

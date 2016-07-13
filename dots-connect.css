@@ -5,6 +5,13 @@
     user-select: none;
 }
 
+header {
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 90px;
+}
+
 body, #main-container {
     background-color: black;
     overflow: hidden;
@@ -144,16 +151,16 @@ button:focus {
     animation: fadeOut linear 0.2s 1;
 }
 
-#new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label, #next-level-button {
+#new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label, #next-level-button, header {
     font-family: 'Main font', fantasy;
 }
 
-#main-scene.fadeIn {
+#main-scene.fadeIn, header.fadeIn {
     animation: fadeIn linear 0.2s 1;
     transition: opacity 0.2s;
 }
 
-#main-scene.fadeOut {
+#main-scene.fadeOut, header.fadeIn {
     animation: fadeOut linear 0.2s 1;
     transition: opacity 0.2s;
 }

@@ -99,7 +99,7 @@ class Menu {
         $('playfield').className = 'glowEnabledOrange';
         this.createLevelButtons();
     }
-    
+
     backButtonClick() {
         if (this.isClicked) return;
         this.isClicked = true;
@@ -113,6 +113,7 @@ class Menu {
                 break;
             case MenuStates.GAME:
                 //GameField destroy
+                $('header').style = 'display: none';
                 Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
                 this.game.scene.canvas.className = 'fadeIn';
                 this.nextLevelButton.remove();
@@ -159,6 +160,7 @@ class Menu {
             return;
         this.isClicked = true;
         this.state += 1;
+        $('header').style = 'display: none';
         Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
         this.game.scene.canvas.className = 'fadeIn';
     }
