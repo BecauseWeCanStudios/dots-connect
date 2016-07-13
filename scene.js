@@ -432,6 +432,10 @@ class Gamefield extends Scene{
         super(canvasElement, gameManager, debugLabels);
         this.context.fillStyle = STYLE_VALUES.BG_COLOR;
         this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+        // Last focused cell, used for dead zone calculations
+        this.lcX = undefined;
+        this.lcY = undefined;
+        this.mouseDownInField = false;
     }
 
     initLevel(level) {
@@ -477,9 +481,13 @@ class Gamefield extends Scene{
         clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize);
     }
 
-    getCellCoordinates(clientX, clientY) {
+    getCellCoordinates(clientX, clientY, prevX, prevY) {
         let x = 0;
         let y = 0;
+        let dz = 0;
+        if (isDef(prevX)) {
+            dz = this.background.cellSize / 8 | 0;
+        }
         if (clientX < this.foreground.x) {
             x = 0;
         }
@@ -487,7 +495,13 @@ class Gamefield extends Scene{
             x = this.foreground.gridSize - 1;
         }
         else {
-            x = (clientX - this.background.x) / this.background.cellSize | 0;
+            let rx = (clientX - this.background.x) / this.background.cellSize | 0;
+            if (isDef(prevX) && rx != prevX) {
+                x = (clientX - this.background.x + (dz * ((rx > prevX) ? -1 : 1))) / this.background.cellSize | 0;
+            }
+            else {
+                x = rx;
+            }
         }
         if (clientY < this.foreground.y) {
             y = 0;
@@ -496,7 +510,13 @@ class Gamefield extends Scene{
             y = this.foreground.gridSize - 1;
         }
         else {
-            y = (clientY - this.background.y) / this.background.cellSize | 0;
+            let ry = (clientY - this.background.y) / this.background.cellSize | 0;
+            if (isDef(prevX) && ry != prevY) {
+                y = (clientY - this.background.y + (dz * ((ry > prevY) ? -1 : 1))) / this.background.cellSize | 0;
+            }
+            else {
+                y = ry;
+            }
         }
         return [x, y];
     }
@@ -510,6 +530,9 @@ class Gamefield extends Scene{
             return;
         }
         let cellCoords = this.getCellCoordinates(pos[0], pos[1]);
+        this.lcX = cellCoords[0];
+        this.lcY = cellCoords[1];
+        this.mouseDownInField = true;
         this.gm.fieldMouseDown(cellCoords[0], cellCoords[1]);
     }
 
@@ -517,13 +540,20 @@ class Gamefield extends Scene{
         if (e.button != 0) {
             return;
         }
+        this.lcX = undefined;
+        this.lcY = undefined;
+        this.mouseDownInField = false;
         this.gm.fieldMouseUp();
     }
 
     onMouseMove(e) {
         super.onMouseMove(e);
         let pos = this.getMouseCoords(e.clientX, e.clientY)
-        let cellCoords = this.getCellCoordinates(pos[0], pos[1]);
+        let cellCoords = this.getCellCoordinates(pos[0], pos[1], this.lcX, this.lcY);
+        if (this.mouseDownInField) {
+            this.lcX = cellCoords[0];
+            this.lcY = cellCoords[1];
+        }
         this.gm.fieldMouseMove(cellCoords[0], cellCoords[1]);
     }
 }
