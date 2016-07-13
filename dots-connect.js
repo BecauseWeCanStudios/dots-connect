@@ -20,7 +20,7 @@ function init() {
 function initSceneCanvas(name) {
     var result = document.createElement('canvas');
     result.id = name;
-    result.style = 'border: solid 1px';
+    result.className = 'fadeOut';
     result.width = 500;
     result.height = 500;
     playfield.appendChild(result);

@@ -11,6 +11,7 @@ var MenuStates = {
 class Menu {
 
     constructor(parent, game) {
+        this.isClicked = true;
         this.parent = parent;
         this.game = game;
         this.levelsCount = storage.levelCount() + 1;
@@ -52,7 +53,7 @@ class Menu {
                 ['font-size', titleFontSize + 'px']
             ], 'DOTS CONNECT'
         ));
-        let button = Menu.createElement('button', [['id', 'new-game-button']], [
+        let button = Menu.createElement('button', [['id', 'new-game-button'], ['class', 'glowEnabledGreen']], [
                 ['line-height', buttonFontSize + 'px'],
                 ['font-size', buttonFontSize + 'px'],
                 ['height', (buttonFontSize * 1.2 | 0) + 'px']
@@ -60,13 +61,14 @@ class Menu {
         );
         Menu.assignListeners(button, [['click', this.newGameClick.bind(this)]]);
         this.menuDiv.appendChild(button);
-        this.menuDiv.appendChild(Menu.createElement('button', [['id', 'score-board-button']], [
+        this.menuDiv.appendChild(Menu.createElement('button', [['id', 'score-board-button'], ['class', 'glowEnabledGreen']], [
                 ['line-height', buttonFontSize + 'px'],
                 ['font-size', buttonFontSize + 'px'],
                 ['height', (buttonFontSize * 1.2 | 0) + 'px']
             ], 'SCORE BOARD'
         ));
-        Menu.assignListeners(this.menuDiv, [['webkitTransitionEnd', this.menuDivTransitionEnd.bind(this)]]);
+        Menu.assignListeners(this.menuDiv, [['transitionend', this.menuDivTransitionEnd.bind(this)]]);
+        Menu.assignListeners(this.menuDiv, [['animationend', this.animationEnd.bind(this)]]);
         this.parent.appendChild(this.menuDiv);
     }
 
@@ -84,6 +86,12 @@ class Menu {
         Menu.assignListeners(this.backButton, [['click', this.backButtonClick.bind(this)]]);
         $('main-container').appendChild(this.backButton);
     }
+    
+    sceneFadeAnimationEnd() {
+        this.game.scene.canvas.remove();
+        $('playfield').className = 'glowEnabledOrange';
+        this.createLevelButtons();
+    }
 
     backButtonClick() {
         if (this.isClicked) return;
@@ -97,22 +105,23 @@ class Menu {
                 this.levelButtonsDiv.style.opacity = 0;
                 break;
             case MenuStates.GAME:
-                this.game.scene.canvas.remove();
                 //GameField destroy
-                this.createLevelButtons();
-                this.isClicked = false;
+                Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
+                this.game.scene.canvas.className = 'fadeIn';
                 this.state -= 1;
         }
     }
     
-    menuDivTransitionEnd() {
+    animationEnd() {
         this.isClicked = false;
+    }
+    
+    menuDivTransitionEnd() {
         this.menuDiv.remove();
         this.createLevelButtons();
     }
 
     buttonsDivTransitionEnd() {
-        this.isClicked = false;
         this.levelButtonsDiv.remove();
         if (this.state == MenuStates.GAME)
             this.startGame();
@@ -124,11 +133,13 @@ class Menu {
         this.game.selectLevel(this.currentLevel);
         this.game.setScene(new Gamefield(initSceneCanvas('main-scene'), this.game));
         this.game.startNewGame();
+        this.isClicked = false;
     }
 
     levelButtonClick(event) {
         if (this.isClicked) return;
         this.isClicked = true;
+        $('playfield').className = 'glowDisabled';
         this.state = MenuStates.GAME;
         this.currentLevel = Number(event.target.id);
         this.levelButtonsDiv.style.opacity = 0;
@@ -144,7 +155,8 @@ class Menu {
             ['height', buttonSize * buttonsInCol + buttonsMargin * (buttonsInCol - 1) + 'px'],
             ['width', buttonSize * buttonsInRow + buttonsMargin * (buttonsInRow - 1) + 'px']
         ], '');
-        Menu.assignListeners(this.levelButtonsDiv, [['webkitTransitionEnd',this.buttonsDivTransitionEnd.bind(this)]]);
+        Menu.assignListeners(this.levelButtonsDiv, [['transitionend',this.buttonsDivTransitionEnd.bind(this)]]);
+        Menu.assignListeners(this.levelButtonsDiv, [['animationend',this.animationEnd.bind(this)]]);
         this.parent.appendChild(this.levelButtonsDiv);
         for (let i = 0; i < this.levelsCount; ++i) {
             let button = Menu.createElement('button', [['id', i.toString()], ['class', 'level-select-button']], [

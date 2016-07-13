@@ -101,7 +101,7 @@ class Game {
         this.isMouseDown = false;
         this.isGameFinished = false;
         this.generator = new Generator();
-        this.levelWidth = this.levelHeight = 5;
+        this.levelWidth = this.levelHeight = 9;
         this.levelNumber = 0;
         this.currentPath = [];
     }
