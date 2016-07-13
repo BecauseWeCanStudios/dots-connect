@@ -147,6 +147,13 @@ class Scene {
         this.requestAnimationFrame();
     }
 
+    getMouseCoords(clientX, clientY) {
+        let boundrect = this.canvas.getBoundingClientRect();
+        let x = (clientX - boundrect.left) / ((boundrect.right - boundrect.left) / this.context.canvas.width);
+        let y = (clientY - boundrect.top) / ((boundrect.bottom - boundrect.top) / this.context.canvas.height);
+        return [x | 0, y | 0];
+    }
+
     // TODO Placeholders
     onMouseDown(e) {
         console.log(e.type)
@@ -157,9 +164,8 @@ class Scene {
     }
 
     onMouseMove(e) {
-        let clientX = e.clientX - this.canvas.offsetLeft;
-        let clientY = e.clientY - this.canvas.offsetTop;
-        this.coorDisplay.updateCoords(clientX, clientY);
+        let pos = this.getMouseCoords(e.clientX, e.clientY);
+        this.coorDisplay.updateCoords(pos[0], pos[1]);
     }
 
     onMouseClick(e) {
@@ -168,7 +174,8 @@ class Scene {
 
     onMouseEnter(e) {
         this.coorDisplay.updateVisibility(true);
-        this.coorDisplay.updateCoords(e.clientX, e.clientY);
+        let pos = this.getMouseCoords(e.clientX, e.clientY);
+        this.coorDisplay.updateCoords(pos[0], pos[1]);
     }
 
     onMouseLeave(e) {
@@ -446,7 +453,6 @@ class Gamefield extends Scene{
         clientX > this.foreground.x + this.foreground.gridSize * this.foreground.cellSize ||
         clientY < this.foreground.y ||
         clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize);
-
     }
 
     getCellCoordinates(clientX, clientY) {
@@ -477,14 +483,12 @@ class Gamefield extends Scene{
         if (e.button != 0) {
             return;
         }
-        let boundrect = this.canvas.getBoundingClientRect();
-        let clientX = e.clientX - boundrect.left;
-        let clientY = e.clientY - boundrect.top;
-        if (!this.checkBound(clientX, clientY)) {
+        let pos = this.getMouseCoords(e.clientX, e.clientY)
+        if (!this.checkBound(pos[0], pos[1])) {
             return;
         }
-        this.gm.fieldMouseDown((clientX - this.background.x) / this.background.cellSize | 0,
-            (clientY - this.background.y) / this.background.cellSize | 0);
+        let cellCoords = this.getCellCoordinates(pos[0], pos[1]);
+        this.gm.fieldMouseDown(cellCoords[0], cellCoords[1]);
     }
 
     onMouseUp(e) {
@@ -496,10 +500,8 @@ class Gamefield extends Scene{
 
     onMouseMove(e) {
         super.onMouseMove(e);
-        let boundrect = this.canvas.getBoundingClientRect();
-        let clientX = e.clientX - boundrect.left;
-        let clientY = e.clientY - boundrect.top;
-        let cellCoords = this.getCellCoordinates(clientX, clientY);
+        let pos = this.getMouseCoords(e.clientX, e.clientY)
+        let cellCoords = this.getCellCoordinates(pos[0], pos[1]);
         this.gm.fieldMouseMove(cellCoords[0], cellCoords[1]);
     }
 }
