@@ -82,7 +82,7 @@ class Level {
     checkAnswer() {
         for (let i = 0; i < this.field.length; ++i)
             for (let j = 0; j < this.field[i].length; ++j)
-                if (!this.field[i][j].color || (this.canStartEnd(j, i) && !this.checkPath(this.field[i][j].color)))
+                if (this.canStartEnd(j, i) && !this.checkPath(this.field[i][j].color))
                     return false;
         return true;
     }
@@ -107,6 +107,18 @@ class Game {
         this.levelWidth = this.levelHeight = 9;
         this.levelNumber = 0;
         this.currentPath = [];
+        this.clearCompletedLevels();
+    }
+    
+    clearCompletedLevels() {
+        this.levelsCompleted = [];
+        for (let i = 0; i < storage.levelCount(); ++i)
+            this.levelsCompleted.push(false);        
+    }
+
+    updateLevelsCompletion(completed) {
+        for (let i = 0; i < this.levelsCompleted.length && completed[i]; ++i)
+            this.levelsCompleted[i] = true;
     }
 
     setScene(scene) {
@@ -211,6 +223,15 @@ class Game {
         }
         return true;
     }
+    
+    getScore() {
+        let res = 0;
+        for (let i = 0; i < this.level.field.length; ++i) 
+            for (let j = 0; j < this.level.field[i].length; ++j) 
+                if (this.level.field[i][j].color && this.level.field[i][j].type != NodeTypes.DOT)
+                    res += 1;
+        return res;
+    }
 
     endPath() {
         this.level.addPath(this.currentPath);
@@ -219,12 +240,14 @@ class Game {
     fieldMouseDown(x, y) {
         if (!this.isGameFinished && this.startPath(x, y)) {
             this.isMouseDown = true;
+            menu.setScore(this.getScore());
             this.scene.updateLevel();
         }
     }
 
     fieldMouseMove(x, y) {
         if (this.isMouseDown && this.continuePath(x, y)) {
+            menu.setScore(this.getScore());
             this.scene.updateLevel();
         }
     }
@@ -235,9 +258,11 @@ class Game {
             this.isGameFinished = true;
             this.isMouseDown = false;
             this.currentPath = [];
+            menu.completeLevel();
             this.scene.updateLevel();
             $('header').style = '';
         }
+        menu.setScore(this.getScore());
         this.currentPath = [];
         this.isMouseDown = false;
     }

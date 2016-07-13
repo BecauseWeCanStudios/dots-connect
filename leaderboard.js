@@ -10,7 +10,7 @@ class Leaderboard {
 
     getUserInfo (username, callback) {
         this.db.ref('userdata/' + username).once('value', (snapshot) => {
-            callback(snapshot.val());
+            callback(username, snapshot.val());
         });
     }
 

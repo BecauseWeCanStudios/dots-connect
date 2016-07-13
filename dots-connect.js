@@ -4,7 +4,8 @@ var scene;
 var game;
 var menu;
 var storage;
-var fbApp
+var fbApp;
+var leaderboard;
 
 function init() {
     // Initialize Firebase
@@ -17,6 +18,7 @@ function init() {
     fbApp = firebase.initializeApp(config);
 	playfield = document.getElementById('playfield');
     playfield.style.width = playfield.style.height = (Math.min(window.innerHeight, window.innerWidth) * 0.8 | 0) + 'px';
+    leaderboard = new Leaderboard();
     storage = new levelStorage();
     game = new Game();
     menu = new Menu(playfield, game);

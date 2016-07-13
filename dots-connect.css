@@ -55,7 +55,6 @@ body, #main-container {
     box-shadow: 0 0 70px 10px rgba(255, 165, 0, 0.7);
     border-radius: 10% 10%;
     background-color: #000000;
-    font-size-adjust: 1;
 }
 
 @font-face {
@@ -91,6 +90,24 @@ body, #main-container {
     }
 }
 
+@keyframes lockedButtonPulsing {
+    from {
+        box-shadow: 0 0 10px 1px rgba(162, 3, 0, 0.7);
+    }
+    to {
+        box-shadow: 0 0 10px 10px rgba(162, 3, 0, 0.7);
+    }
+}
+
+@keyframes levelAvailableButtonPulsing {
+    from {
+        box-shadow: 0 0 10px 1px rgba(220, 170, 52, 0.7);
+    }
+    to {
+        box-shadow: 0 0 10px 10px rgba(220, 170, 52, 0.7);
+    }
+}
+
 @keyframes fadeOut {
     from {
         opacity: 0;
@@ -113,11 +130,11 @@ body, #main-container {
     animation: backButtonPulsing linear 0.7s infinite alternate;
 }
 
-#new-game-button:hover, #score-board-button:hover, button.level-select-button:hover {
+#new-game-button:hover, #score-board-button:hover, button.level-select-button:hover, input:hover, button:hover {
     animation: menuButtonPulsing linear 0.7s infinite alternate;
 }
 
-button:focus {
+button:focus, input:focus {
     outline: none !important;
 }
 
@@ -127,18 +144,36 @@ button:focus {
     border: none;
 }
 
-.glowEnabledOrange, #back-button, #next-level-button{
+button.levelAvailable:hover {
+    animation: levelAvailableButtonPulsing linear 0.7s infinite alternate;
+}
+
+button.levelAvailable {
+    border: #dcaa34 solid 1px;
+    box-shadow: 0 0 10px 1px rgba(220, 170, 52, 0.7);
+}
+
+button.locked:hover {
+    animation: lockedButtonPulsing linear 0.7s infinite alternate;
+}
+
+button.locked {
+    border: #a20300 solid 1px;
+    box-shadow: 0 0 10px 1px rgba(162, 3, 0, 0.7);
+}
+
+.glowEnabledOrange, #back-button, #next-level-button {
     transition: box-shadow 0.3s, border 0.3s;
     border: orange solid 1px;
     box-shadow: 0 0 10px 1px rgba(255, 165, 0, 0.7);
 }
 
-#new-game-button.glowEnabledGreen, #score-board-button.glowEnabledGreen, button.level-select-button {
+#new-game-button.glowEnabledGreen, #score-board-button.glowEnabledGreen, button, input {
     border: green solid 1px;
     box-shadow: 0 0 10px 1px rgba(0, 128, 0, 0.7);
 }
 
-#new-game-button, #score-board-button, button.level-select-button, #back-button, #next-level-button {
+#new-game-button, #score-board-button, button, #back-button, #next-level-button, input {
     color: white;
     background-color: inherit;
     width: 85%;
@@ -151,7 +186,8 @@ button:focus {
     animation: fadeOut linear 0.2s 1;
 }
 
-#new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label, #next-level-button, header {
+#new-game-button, #score-board-button, button, #back-button, #title-label, #next-level-button,
+    header, #score-label, input {
     font-family: 'Main font', fantasy;
 }
 
@@ -163,4 +199,13 @@ button:focus {
 #main-scene.fadeOut, header.fadeIn {
     animation: fadeOut linear 0.2s 1;
     transition: opacity 0.2s;
+}
+
+#score-label {
+    position: absolute;
+    color: white;
+}
+
+input {
+    text-align: center;
 }

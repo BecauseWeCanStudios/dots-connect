@@ -9,9 +9,34 @@ var MenuStates = {
     CHANGING_LEVEL: 3
 };
 
+var opts = {
+    lines: 11 // The number of lines to draw
+    , length: 0 // The length of each line
+    , width: 50 // The line thickness
+    , radius: 84 // The radius of the inner circle
+    , scale: 1 // Scales overall size of the spinner
+    , corners: 0.7 // Corner roundness (0..1)
+    , color: '#FFFFFF' // #rgb or #rrggbb or array of colors
+    , opacity: 0.1 // Opacity of the lines
+    , rotate: 0 // The rotation offset
+    , direction: 1 // 1: clockwise, -1: counterclockwise
+    , speed: 1 // Rounds per second
+    , trail: 40 // Afterglow percentage
+    , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+    , zIndex: 2e9 // The z-index (defaults to 2000000000)
+    , className: 'spinner' // The CSS class to assign to the spinner
+    , top: '50%' // Top position relative to parent
+    , left: '50%' // Left position relative to parent
+    , shadow: false // Whether to render a shadow
+    , hwaccel: false // Whether to use hardware acceleration
+    , position: 'absolute' // Element positioning
+};
+
 class Menu {
 
     constructor(parent, game) {
+        this.nickname = ' ';
+        this.spinner = new Spinner(opts);
         this.isClicked = true;
         this.parent = parent;
         this.game = game;
@@ -20,6 +45,7 @@ class Menu {
         this.parent.style.width = this.parent.style.height = 
             Math.ceil(Math.min(window.innerHeight, window.innerWidth)) * 0.8 + 'px';
         window.onresize = this.updateAll.bind(this);
+        this.createScoreLabel();
         this.createMenuDiv(parent);
     }
 
@@ -59,6 +85,12 @@ class Menu {
             ['line-height', titleFontSize + 'px'],
             ['font-size', titleFontSize + 'px']
         ]);
+        Menu.setElementStyle($('nickname-input'), [
+            ['line-height', buttonFontSize * 0.5 + 'px'],
+            ['font-size', buttonFontSize * 0.5 + 'px'],
+            ['height', (buttonFontSize * 0.8 | 0) + 'px'],
+            ['width', this.menuDiv.offsetWidth * 0.7 + 'px'],
+        ]);
         Menu.setElementStyle($('new-game-button'), [
             ['line-height', buttonFontSize + 'px'],
             ['font-size', buttonFontSize + 'px'],
@@ -74,6 +106,9 @@ class Menu {
     createMenuDiv() {
         this.menuDiv = Menu.createElement('div', [['id', 'menu-div']], [], '');
         this.menuDiv.appendChild(Menu.createElement('label', [['id', 'title-label']], [], 'DOTS CONNECT'));
+        let input = Menu.createElement('input', [['id', 'nickname-input']], [], '');
+        input.value = 'Nickname';
+        this.menuDiv.appendChild(input);
         let button = Menu.createElement('button', [['id', 'new-game-button'], ['class', 'glowEnabledGreen']], [], 'NEW GAME');
         Menu.assignListeners(button, [['click', this.newGameClick.bind(this)]]);
         this.menuDiv.appendChild(button);
@@ -134,6 +169,8 @@ class Menu {
                 Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
                 this.game.scene.canvas.className = 'fadeIn';
                 this.nextLevelButton.remove();
+                this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + this.userInfo.totalScore;
+                this.updateScoreLabel();
                 this.state -= 1;
         }
     }
@@ -144,7 +181,8 @@ class Menu {
     
     menuDivTransitionEnd() {
         this.menuDiv.remove();
-        this.createLevelButtons();
+        this.spinner.spin($('main-container'));
+        leaderboard.getUserInfo(this.nickname, this.onGetUserInfo.bind(this));
     }
 
     buttonsDivTransitionEnd() {
@@ -163,22 +201,31 @@ class Menu {
     }
 
     levelButtonClick(event) {
-        if (this.isClicked) return;
+        if (this.isClicked || event.target.className == 'locked') return;
         this.isClicked = true;
         $('playfield').className = 'glowDisabled';
         this.state = MenuStates.GAME;
         this.currentLevel = Number(event.target.id);
         this.levelButtonsDiv.style.opacity = 0;
+        if (this.currentLevel < this.levelsCount - 1)
+            this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: 0';
+        else
+            this.scoreLabel.innerHTML = 'RANDOM SCORE: 0';            
+        this.updateScoreLabel();
         this.createNextLevelButton();
     }
 
     nextLevelButtonClick() {
-        if(this.isClicked)
+        if(this.isClicked || (!this.game.levelsCompleted[this.currentLevel] && this.currentLevel < this.levelsCount - 1))
             return;
         this.isClicked = true;
         this.state += 1;
         $('header').style = 'display: none';
         Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
+        if (this.currentLevel < this.levelsCount - 1)
+            this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: 0';
+        else
+            this.scoreLabel.innerHTML = 'RANDOM SCORE: 0';
         this.game.scene.canvas.className = 'fadeIn';
     }
 
@@ -229,7 +276,14 @@ class Menu {
         Menu.assignListeners(this.levelButtonsDiv, [['animationend',this.animationEnd.bind(this)]]);
         this.parent.appendChild(this.levelButtonsDiv);
         for (let i = 0; i < this.levelsCount; ++i) {
-            let button = Menu.createElement('button', [['id', i.toString()], ['class', 'level-select-button']], 
+            let buttonClass;
+            if (game.levelsCompleted[i])
+                buttonClass = '';
+            else if (!i || (!game.levelsCompleted[i] && game.levelsCompleted[i - 1]))
+                buttonClass = 'levelAvailable';
+            else 
+                buttonClass = 'locked';
+            let button = Menu.createElement('button', [['id', i.toString()], ['class', buttonClass]], 
                 [], i != this.levelsCount - 1 ? (i + 1).toString() : '?');
             Menu.assignListeners(button, [['click', this.levelButtonClick.bind(this)]]);
             this.levelButtonsDiv.appendChild(button);
@@ -237,10 +291,29 @@ class Menu {
         this.updateLevelButtons();
     }
 
+    onGetUserInfo(nickname, userInfo) {
+        console.log(userInfo);
+        if (!userInfo) {
+            leaderboard.addUser(this.nickname);
+            leaderboard.getUserInfo(this.nickname, this.onGetUserInfo.bind(this));
+            return;
+        }
+        this.spinner.stop();
+        this.userInfo = userInfo;
+        this.nickname = nickname;
+        this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + userInfo.totalScore;
+        this.game.clearCompletedLevels();
+        if (userInfo.levels !== undefined) 
+            this.game.updateLevelsCompletion(userInfo.levels);
+        this.updateScoreLabel();
+        this.createLevelButtons();
+    }
+
     newGameClick() {
         if (this.isClicked) return;
         this.isClicked = true;
         this.state = MenuStates.LEVEL_SELECT;
+        this.nickname = $('nickname-input').value;
         this.createBackButton();
         this.menuDiv.style.opacity = 0;
     }
@@ -250,6 +323,30 @@ class Menu {
             func();        
     }
     
+    completeLevel() {
+        if (this.currentLevel >= this.levelsCount - 1)
+            return;
+        let pre_score = 0, cur_score = this.game.getScore();
+        if (this.userInfo && this.userInfo.levels) {
+            if (this.currentLevel < this.userInfo.levels.length) {
+                pre_score = this.userInfo.levels[this.currentLevel];
+                this.userInfo.levels[this.currentLevel] = cur_score;
+            }
+            else
+                this.userInfo.levels.push(cur_score);                
+        }
+        else 
+            this.userInfo.levels = [cur_score];
+        this.game.levelsCompleted[this.currentLevel] = true;
+        console.log('AAAAAAAAAAAAAAA');
+        if (cur_score > pre_score) {
+            leaderboard.updateUserScore(this.nickname, this.currentLevel, cur_score, 
+                this.userInfo.totalScore - pre_score + cur_score);
+            this.userInfo.totalScore += cur_score - pre_score;
+            console.log(this.userInfo.totalScore);
+        }
+    }
+    
     updateAll() {
         this.parent.style.width = this.parent.style.height =
             Math.ceil(Math.min(window.innerHeight, window.innerWidth)) * 0.8 + 'px';
@@ -257,5 +354,27 @@ class Menu {
         Menu.tryUpdate(this.backButton, this.updateBackButton.bind(this));
         Menu.tryUpdate(this.nextLevelButton, this.updateNextLevelButton.bind(this));
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
+        Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
+    }
+    
+    setScore(score) {
+        this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: ' + score;
+        this.updateScoreLabel();
+    }
+
+    updateScoreLabel() {
+        let fontSize = Math.min(window.innerHeight, window.innerWidth) * 0.1;
+        Menu.setElementStyle(this.scoreLabel, [
+            ['font-size', fontSize * 0.5 + 'px'],
+            ['line-height', fontSize + 'px'],
+            ['top', this.parent.offsetTop + this.parent.offsetHeight + 'px']
+        ]);
+        this.scoreLabel.style.left = Math.floor((window.innerWidth - this.scoreLabel.offsetWidth) / 2) + 'px';
+    }
+
+    createScoreLabel() {
+        this.scoreLabel = Menu.createElement('label', [['id', 'score-label']], [], '');
+        $('main-container').appendChild(this.scoreLabel);
+        this.updateScoreLabel();
     }
 }
