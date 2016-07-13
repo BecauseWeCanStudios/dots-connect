@@ -478,4 +478,4 @@ class Gamefield extends Scene{
         this.gm.fieldMouseMove((clientX - this.background.x) / this.background.cellSize | 0,
             (clientY - this.background.y) / this.background.cellSize | 0);
     }
-}}
+}
