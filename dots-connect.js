@@ -4,8 +4,17 @@ var scene;
 var game;
 var menu;
 var storage;
+var fbApp
 
 function init() {
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyDYgHZ_7RRrDt7bpjhZRmQ2V2shCCQ8fUk",
+        authDomain: "dots-connect.firebaseapp.com",
+        databaseURL: "https://dots-connect.firebaseio.com",
+        storageBucket: "dots-connect.appspot.com",
+    };
+    fbApp = firebase.initializeApp(config);
 	playfield = document.getElementById('playfield');
     playfield.style.width = playfield.style.height = (Math.min(window.innerHeight, window.innerWidth) * 0.8 | 0) + 'px';
     storage = new levelStorage();
