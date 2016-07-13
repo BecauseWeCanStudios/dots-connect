@@ -62,7 +62,7 @@ class Generator {
         var flows = {};
         this.recordFlows(table, puzzle, flows);
         //attempt to fix degenerated segments is made
-        this.fixDegenerated(table, puzzle, flows);
+        this.findDegenerated(table, puzzle, flows);
         this.flatten(table);
         this.flattenPuzzle(table, puzzle);
         flows = this.flattenFlows(table, flows);
@@ -280,7 +280,7 @@ class Generator {
     //This function makes an attempt to partially fix degenerated segments
     //It doesn't cover all the cases, but it probably covers the most often ones
     //It also applies according fixes to the flows needed for output
-    fixDegenerated (solution, puzzle, flows) {
+    findDegenerated (solution, puzzle, flows) {
         var width = solution[0].length;
         var height = solution.length;
         for (let y = 0; y < height; ++y) {
@@ -293,16 +293,21 @@ class Generator {
                             this.isFlowHead(x1, y1, solution) &&
                             solution[y][x] == solution[y1][x1])
                         {
-                            if (Math.abs(x - x1) == 1) {
-                                this.fixHorizontalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
-                            }
-                            if (Math.abs(y - y1) == 1) {
-                                this.fixVerticalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
-                            }
+                            this.fixDegenSegment(x, y, x1, y1, width, height, solution, flows, puzzle);
+                            break;
                         }
                     }
                 }
             }
+        }
+    }
+
+    fixDegenSegment(x, y, x1, y1, width, height, solution, flows, puzzle) {
+        if (Math.abs(x - x1) == 1) {
+            this.fixHorizontalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
+        }
+        if (Math.abs(y - y1) == 1) {
+            this.fixVerticalCase(x1, y1, width, height, solution, x, y, flows, puzzle);
         }
     }
 
@@ -328,17 +333,8 @@ class Generator {
                         return element.x == x1 + dx1[j] &&
                             element.y == y1;
                     });
-                if (i1 > i2) {
-                    flows[color].splice(i1, 0, {x: x1, y: y1}, {x: x, y: y});
-                }
-                else {
-                    flows[color].splice(i2, 0, {x: x, y: y}, {x: x1, y: y1});
-                }
-                delete flows[solution[y][x]];
-                solution[y][x] = color;
-                solution[y1][x1] = color;
-                puzzle[y][x] = 0;
-                puzzle[y1][x1] = 0;
+                this.fixFlow(i1, i2, flows, color, x1, y1, x, y, solution, puzzle);
+                return;
             }
         }
     }
@@ -364,19 +360,24 @@ class Generator {
                         return element.x == x1 &&
                             element.y == y1 + dy1[j];
                     });
-                if (i1 > i2) {
-                    flows[color].splice(i1, 0, {x: x1, y: y1}, {x: x, y: y});
-                }
-                else {
-                    flows[color].splice(i2, 0, {x: x, y: y}, {x: x1, y: y1});
-                }
-                delete flows[solution[y][x]];
-                solution[y][x] = color;
-                solution[y1][x1] = color;
-                puzzle[y][x] = 0;
-                puzzle[y1][x1] = 0;
+                this.fixFlow(i1, i2, flows, color, x1, y1, x, y, solution, puzzle);
+                return;
             }
         }
+    }
+
+    fixFlow(i1, i2, flows, color, x1, y1, x, y, solution, puzzle) {
+        if (i1 > i2) {
+            flows[color].splice(i1, 0, {x: x1, y: y1}, {x: x, y: y});
+        }
+        else {
+            flows[color].splice(i2, 0, {x: x, y: y}, {x: x1, y: y1});
+        }
+        delete flows[solution[y][x]];
+        solution[y][x] = color;
+        solution[y1][x1] = color;
+        puzzle[y][x] = 0;
+        puzzle[y1][x1] = 0;
     }
 
     flattenPuzzle (solution, puzzle) {
@@ -432,7 +433,7 @@ class Generator {
 //debug
 
 // var gen = new Generator();
-// var res = gen.generate(6, 6);
+// var res = gen.generate(10, 10);
 // var s = '';
 // for (let y = 0; y < res.puzzle.length; ++y) {
 //     for (let x = 0; x < res.puzzle[y].length; ++x) {
