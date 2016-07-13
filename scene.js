@@ -20,6 +20,7 @@ var STYLE_VALUES = {
     DOT_RADIUS: 18,
     CONNECTION_STROKE_WIDTH: 15,
     CONNECTION_LINE_CAP: 'round',
+    CONNECTION_LINE_JOIN: 'round',
     GAMEFIELD_OFFSET_X: 50.5,
     GAMEFIELD_OFFSET_Y: 50.5
 }
@@ -375,28 +376,33 @@ class NodesGrid extends Grid {
         let prevStroke = context.strokeStyle;
         let prevLineW = context.lineWidth;
         let prevLineC = context.lineCap;
+        let prevLineJ = context.lineJoin;
         context.strokeStyle = STYLE_VALUES.POINT_COLORS[path[0].color - 1];
         context.lineWidth = STYLE_VALUES.CONNECTION_STROKE_WIDTH;
         context.lineCap = STYLE_VALUES.CONNECTION_LINE_CAP;
+        context.lineJoin = STYLE_VALUES.CONNECTION_LINE_JOIN;
 
         let orientation = undefined;
-        let prevCenter = this.getCenter(path[0].x, path[0].y);
-        for (let i = 1; i <= path.length; i++) {
-            let newOrientation = (isDef(path[i]) && path[i - 1].x - path[i].x == 0) ? 1 : 2;
-            if (newOrientation != orientation || i == path.length) {
-                context.beginPath();
-                context.moveTo(prevCenter[0], prevCenter[1]);
-                let curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
-                context.lineTo(curCenter[0], curCenter[1]);
-                context.stroke();
-                orientation = newOrientation;
-                prevCenter = curCenter;
+        let curCenter = this.getCenter(path[0].x, path[0].y);
+        if (path.length > 1) {
+            context.beginPath();
+            context.moveTo(curCenter[0], curCenter[1]);
+            for (let i = 1; i <= path.length; i++) {
+                let newOrientation = (isDef(path[i]) && path[i - 1].x - path[i].x == 0) ? 1 : 2;
+                if (newOrientation != orientation || i == path.length) {
+                    console.log(context.lineCap);
+                    curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
+                    context.lineTo(curCenter[0] - 0.5, curCenter[1] - 0.5);
+                    orientation = newOrientation;
+                }
             }
+            context.stroke();
         }
 
         context.strokeStyle = prevStroke;
         context.lineWidth = prevLineW;
         context.lineCap = prevLineC;
+        context.lineJoin = prevLineJ;
         return true;
     }
 
