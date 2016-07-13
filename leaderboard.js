@@ -1,6 +1,6 @@
 const LEADERBOARD_SIZE = 10;
 
-class leaderboard {
+class Leaderboard {
 
     constructor () {
         this.db = fbApp.database();
@@ -35,6 +35,14 @@ class leaderboard {
             });
             callback(levels);
         });
+    }
+
+    getUserInfo (username, callback) {
+        this.getPassedLevels(username, (levels) => {
+            this.db.ref('leaderboard/' + username).on('value', (snapshot) => {
+                callback({score: snapshot.val(), levels: levels});
+            });
+        })
     }
 
 }
