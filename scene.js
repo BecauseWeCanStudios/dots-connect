@@ -477,8 +477,9 @@ class Gamefield extends Scene{
         if (e.button != 0) {
             return;
         }
-        let clientX = e.clientX - this.canvas.offsetLeft;
-        let clientY = e.clientY - this.canvas.offsetTop;
+        let boundrect = this.canvas.getBoundingClientRect();
+        let clientX = e.clientX - boundrect.left;
+        let clientY = e.clientY - boundrect.top;
         if (!this.checkBound(clientX, clientY)) {
             return;
         }
@@ -495,8 +496,9 @@ class Gamefield extends Scene{
 
     onMouseMove(e) {
         super.onMouseMove(e);
-        let clientX = e.clientX - this.canvas.offsetLeft;
-        let clientY = e.clientY - this.canvas.offsetTop;
+        let boundrect = this.canvas.getBoundingClientRect();
+        let clientX = e.clientX - boundrect.left;
+        let clientY = e.clientY - boundrect.top;
         let cellCoords = this.getCellCoordinates(clientX, clientY);
         this.gm.fieldMouseMove(cellCoords[0], cellCoords[1]);
     }
