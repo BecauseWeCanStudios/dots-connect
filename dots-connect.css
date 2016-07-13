@@ -17,7 +17,7 @@ body, #main-container {
     align-items: center;
 }
 
-#playfield, #menu-div {
+#playfield, #menu-div, #next-level-button, #back-button {
     position: absolute;
     top:0;
     bottom: 0;
@@ -102,7 +102,7 @@ body, #main-container {
     }
 }
 
-#back-button:hover {
+#back-button:hover, #next-level-button:hover, #next-level-button:hover {
     animation: backButtonPulsing linear 0.7s infinite alternate;
 }
 
@@ -120,7 +120,7 @@ button:focus {
     border: none;
 }
 
-.glowEnabledOrange, #back-button{
+.glowEnabledOrange, #back-button, #next-level-button{
     transition: box-shadow 0.3s, border 0.3s;
     border: orange solid 1px;
     box-shadow: 0 0 10px 1px rgba(255, 165, 0, 0.7);
@@ -131,7 +131,7 @@ button:focus {
     box-shadow: 0 0 10px 1px rgba(0, 128, 0, 0.7);
 }
 
-#new-game-button, #score-board-button, button.level-select-button, #back-button {
+#new-game-button, #score-board-button, button.level-select-button, #back-button, #next-level-button {
     color: white;
     background-color: inherit;
     width: 85%;
@@ -144,7 +144,7 @@ button:focus {
     animation: fadeOut linear 0.2s 1;
 }
 
-#new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label {
+#new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label, #next-level-button {
     font-family: 'Main font', fantasy;
 }
 

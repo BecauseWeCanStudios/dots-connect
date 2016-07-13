@@ -5,7 +5,8 @@ const $ = document.getElementById.bind(document);
 var MenuStates = {
     MAIN_MENU: 0,
     LEVEL_SELECT: 1,
-    GAME: 2
+    GAME: 2,
+    CHANGING_LEVEL: 3
 };
 
 class Menu {
@@ -75,24 +76,30 @@ class Menu {
     createBackButton() {
         let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
         this.backButton = Menu.createElement('button', [['id', 'back-button']], [
-            ['position', 'relative'],
             ['width', buttonSize + 'px'],
             ['height', buttonSize + 'px'],
-            ['top', this.parent.offsetHeight / 2 - buttonSize + 'px'],
-            ['left', this.parent.offsetWidth / 2 + buttonSize + 'px'],
+            ['top', this.parent.offsetHeight - buttonSize + 'px'],
+            ['left', this.parent.offsetWidth + buttonSize * 1.5 + 'px'],
             ['font-size', buttonSize * 0.5 + 'px'],
             ['line-height', buttonSize * 0.5 + 'px']
-        ], '←');
+        ], '✖');
         Menu.assignListeners(this.backButton, [['click', this.backButtonClick.bind(this)]]);
         $('main-container').appendChild(this.backButton);
     }
     
     sceneFadeAnimationEnd() {
+        if (this.state == MenuStates.CHANGING_LEVEL) {
+            this.game.scene.canvas.remove();
+            this.state -= 1;
+            this.currentLevel += 1;
+            this.startGame();
+            return;
+        }
         this.game.scene.canvas.remove();
         $('playfield').className = 'glowEnabledOrange';
         this.createLevelButtons();
     }
-
+    
     backButtonClick() {
         if (this.isClicked) return;
         this.isClicked = true;
@@ -108,6 +115,7 @@ class Menu {
                 //GameField destroy
                 Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
                 this.game.scene.canvas.className = 'fadeIn';
+                this.nextLevelButton.remove();
                 this.state -= 1;
         }
     }
@@ -143,6 +151,31 @@ class Menu {
         this.state = MenuStates.GAME;
         this.currentLevel = Number(event.target.id);
         this.levelButtonsDiv.style.opacity = 0;
+        this.createNextLevelButton();
+    }
+
+    nextLevelButtonClick() {
+        if(this.isClicked)
+            return;
+        this.isClicked = true;
+        this.state += 1;
+        Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
+        this.game.scene.canvas.className = 'fadeIn';
+    }
+    
+    createNextLevelButton() {
+        let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
+        this.nextLevelButton = Menu.createElement('button', [['id', 'next-level-button']], [
+            //['position', 'relative'],
+            ['width', buttonSize + 'px'],
+            ['height', buttonSize + 'px'],
+            ['top', this.parent.offsetHeight - buttonSize * 4 + 'px'],
+            ['left', this.parent.offsetWidth + buttonSize * 1.5 + 'px'],
+            ['font-size', buttonSize * 0.5 + 'px'],
+            ['line-height', buttonSize * 0.5 + 'px']
+        ], '→');
+        Menu.assignListeners(this.nextLevelButton, [['click', this.nextLevelButtonClick.bind(this)]]);
+        $('main-container').appendChild(this.nextLevelButton);
     }
     
     createLevelButtons() {
