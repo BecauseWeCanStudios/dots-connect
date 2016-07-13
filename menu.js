@@ -74,16 +74,16 @@ class Menu {
     createBackButton() {
         let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
         this.backButton = Menu.createElement('button', [['id', 'back-button']], [
-            ['position', 'absolute'],
+            ['position', 'relative'],
             ['width', buttonSize + 'px'],
             ['height', buttonSize + 'px'],
-            ['top', this.parent.offsetTop + this.parent.offsetHeight - buttonSize + 'px'],
-            ['left', this.parent.offsetLeft + this.parent.offsetWidth + buttonSize * 0.5 + 'px'],
+            ['top', this.parent.offsetHeight / 2 - buttonSize + 'px'],
+            ['left', this.parent.offsetWidth / 2 + buttonSize + 'px'],
             ['font-size', buttonSize * 0.5 + 'px'],
             ['line-height', buttonSize * 0.5 + 'px']
         ], '←');
         Menu.assignListeners(this.backButton, [['click', this.backButtonClick.bind(this)]]);
-        this.parent.appendChild(this.backButton);
+        $('main-container').appendChild(this.backButton);
     }
 
     backButtonClick() {

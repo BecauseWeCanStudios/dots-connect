@@ -13,9 +13,17 @@ body, #main-container {
 #main-container, #playfield, #menu-div {
     display: flex;
     flex-flow: wrap;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+#playfield, #menu-div {
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 }
 
 #main-container {
@@ -71,12 +79,21 @@ body, #main-container {
     }
 }
 
+@keyframes fadeOut {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 #back-button:hover {
-    -webkit-animation: backButtonPulsing linear 0.5s infinite alternate;
+    animation: backButtonPulsing linear 0.5s infinite alternate;
 }
 
 #new-game-button:hover, #score-board-button:hover, button.level-select-button:hover {
-    -webkit-animation: menuButtonPulsing linear 0.5s infinite alternate;
+    animation: menuButtonPulsing linear 0.5s infinite alternate;
 }
 
 #new-game-button:focus, #score-board-button:focus, button.level-select-button:focus {
@@ -103,6 +120,7 @@ body, #main-container {
 #menu-div, #level-buttons-div {
     transition: opacity 0.5s;
     align-self: center;
+    animation: fadeOut linear 0.5s 1;
 }
 
 #new-game-button, #score-board-button, button.level-select-button, #back-button, #title-label {
