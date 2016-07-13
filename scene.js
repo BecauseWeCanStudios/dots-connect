@@ -2,6 +2,28 @@ function isDef(o) {
     return typeof(o) != 'undefined';
 }
 
+/*
+ context.fillStyle = 'rgb(0, 0, 0)';
+ context.fillRect(this.x, this.y, this.w, this.h);
+ context.strokeStyle = 'rgb(255, 255, 255)'
+ */
+
+var STYLE_VALUES = {
+    BG_COLOR: 'rgb(0, 0, 0)',
+    GRID_BG_FILL: 'rgb(0, 0, 0)',
+    GRID_BG_STROKE: 'rgb(170, 170, 170)',
+    POINT_COLORS: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 'rgb(255, 255, 0)', 'rgb(255, 0, 255)',
+        'rgb(0, 255, 255)', 'rgb(125, 0, 0)', 'rgb(0, 125, 0)', 'rgb(0, 0, 125)', 'rgb(125, 125, 0)',
+        'rgb(255, 155, 155)', 'rgb(155, 255, 155)', 'rgb(155, 155, 255)', 'rgb(90, 90, 255)', 'rgb(90, 255, 90)',
+        'rgb(255, 90, 90)'],
+    CELL_SIDE: 48,
+    DOT_RADIUS: 18,
+    CONNECTION_STROKE_WIDTH: 15,
+    CONNECTION_LINE_CAP: 'round',
+    GAMEFIELD_OFFSET_X: 50.5,
+    GAMEFIELD_OFFSET_Y: 50.5
+}
+
 class Drawable {
     constructor(x, y) {
         this.x = x;
@@ -20,7 +42,7 @@ class DebugLabel extends Drawable {
     }
 
     render(context, frame, timestamp, text) {
-        context.font = '12px';
+        context.font = '12px sans-serif';
         context.textAlign = 'left';
         context.textBaseline = 'hanging';
         let measurement = context.measureText(text);
@@ -85,6 +107,7 @@ class Scene {
         this.gm = gameManager;
         this.context = this.canvas.getContext('2d');
         this.requestAnimationFrame();
+        console.log('Scene "' + canvasElement.id + '" initialized');
     }
 
     assignListeners(element) {
@@ -221,34 +244,10 @@ class BackgroundTile extends Tile {
         if (!this.dirty)
             return;
         // TODO Single redraw with hidden canvas?
-        context.fillStyle = 'rgb(255, 255, 255)';
+        context.fillStyle = STYLE_VALUES.GRID_BG_FILL;
         context.fillRect(this.x, this.y, this.w, this.h);
-        context.strokeStyle = 'rgb(100, 100, 100)';
-        context.setLineDash([15, 15]);
+        context.strokeStyle = STYLE_VALUES.GRID_BG_STROKE;
         context.strokeRect(this.x, this.y, this.w, this.h);
-        context.strokeStyle = 'rgb(0, 0, 0)';
-        context.setLineDash([]);
-        context.beginPath();
-        let centerX = this.x + (this.w / 2 | 0);
-        let centerY = this.y + (this.h / 2 | 0);
-        if (this.col != 0) {
-            context.moveTo(this.x, centerY);
-            context.lineTo(centerX, centerY);
-        }
-        if (this.col != this.grid.gridSize - 1) {
-            context.moveTo(centerX, centerY);
-            context.lineTo(this.x + this.w, centerY);
-        }
-        if (this.row != 0) {
-            context.moveTo(centerX, this.y);
-            context.lineTo(centerX, centerY);
-        }
-        if (this.row != this.grid.gridSize - 1) {
-            context.moveTo(centerX, centerY);
-            context.lineTo(centerX, this.y + this.h);
-        }
-        context.stroke();
-        context.closePath();
         this.dirty = false;
     }
 }
@@ -257,14 +256,14 @@ class NodeTile extends Tile {
     constructor(grid, ix, iy, col, row, w, h, id) {
         super(grid, ix, iy, col, row, w, h);
         this.nodeId = id;
-        this.radius = w / 2 | 0;
+        this.radius = STYLE_VALUES.DOT_RADIUS;
     }
 
     render(context, frame, timestamp) {
         if (!this.dirty || this.nodeId == 0) // TODO Enum with node states
             return;
 
-        context.fillStyle = 'rgb' + this.grid.colorCodes[this.nodeId - 1];
+        context.fillStyle = STYLE_VALUES.POINT_COLORS[this.nodeId - 1];
         let centerX = this.x + (this.w / 2 | 0);
         let centerY = this.y + (this.h / 2 | 0);
         context.beginPath();
@@ -285,8 +284,6 @@ class NodesGrid extends Grid {
         this.cells = [];
         this.dirtyPaths = [];
         this.currentState = {};
-        this.colorCodes = ['(255, 0, 0)', '(0, 255, 0)', '(0, 0, 255)', '(255, 255, 0)', '(255, 0, 255)',
-            '(0, 255, 255)', '(125, 0, 0)', '(0, 125, 0)', '(0, 0, 125)', '(125, 125, 0)'];
         this.initLevel(level);
     }
 
@@ -304,46 +301,45 @@ class NodesGrid extends Grid {
         // TODO Grid size checks
         var changed = [];
         let amt = 0;
-        /*for (let i = 0; i < level.length; i++) {
-            for (let j = 0; j < level[i].length; j++) {
-                let ind = i * this.gridSize + j;
-                if (this.cells[ind].nodeId != level[i][j].color) {
-                    this.cells[ind].nodeId = level[i][j].color;
-                    changed[amt] = ind;
-                    amt++;
-                    this.forceRedraw(ind);
-                }
-            }
-        }*/
+        if (this.dirtyPaths.length > level.paths.length) {
+            // TODO Handle addition and removal of paths
+        }
         let curPath = gm.currentPath;
-        console.log(curPath);
         let prevPath = this.currentState.prevPath;
         if (curPath.length == 0 || (isDef(this.currentState.color) && this.currentState.color != curPath[0].color)) {
+            // Clean up old currentPath info
             this.currentState = {};
+            prevPath = undefined;
             if (isDef(this.level.paths))
             {
                 this.dirtyPaths[this.level.paths.length - 1] = false;
             }
         }
-        else if (curPath.length > 1 && (isDef(prevPath) && curPath.length != prevPath.length)) {
+        if ((curPath.length > 1 && (isDef(prevPath) && curPath.length != prevPath.length)) ||
+            (curPath.length == 1 && (isDef(prevPath)))) {
+            // Updating current path
             if (curPath.length > prevPath.length) {
                 this.currentState.newNodes = curPath.length - prevPath.length;
                 if (curPath.length > 2) {
+                    // Redraws one more cell for looks
                     this.currentState.newNodes++;
                 }
                 this.currentState.dirty = true;
             } else {
                 for (let i = prevPath.length - 1; i >= curPath.length - 1; i--) {
-                    if (prevPath[i].type == NodeTypes.ROAD) {
-                        changed[changed.length] = this.getElementId(prevPath[i].x, prevPath[i].y);
+                    let eid = this.getElementId(prevPath[i].x, prevPath[i].y);
+                    if (prevPath[i].type == NodeTypes.DOT) {
+                        this.forceRedraw(eid);
                     }
+                    changed[changed.length] = eid;
                 }
                 this.currentState.newNodes = 1; // Redraw latest element
-                this.currentState.dirty = true
+                this.currentState.dirty = true;
             }
             this.currentState.prevPath = curPath.slice();
         }
         else if (curPath.length == 1 && (!isDef(this.currentState.color))) {
+            // New currentPath initialization
             this.currentState.color = curPath[0].color;
             this.currentState.dirty = false; // Nothing to draw yet
             this.currentState.prevPath = curPath.slice();
@@ -355,11 +351,9 @@ class NodesGrid extends Grid {
         let prevStroke = context.strokeStyle;
         let prevLineW = context.lineWidth;
         let prevLineC = context.lineCap;
-        context.strokeStyle = 'rgb' + this.colorCodes[path[0].color - 1];
-        context.lineWidth = '10';
-        context.lineCap = 'round';
-
-        console.log('drawPath');
+        context.strokeStyle = STYLE_VALUES.POINT_COLORS[path[0].color - 1];
+        context.lineWidth = STYLE_VALUES.CONNECTION_STROKE_WIDTH;
+        context.lineCap = STYLE_VALUES.CONNECTION_LINE_CAP;
 
         let orientation = undefined;
         let prevCenter = this.getCenter(path[0].x, path[0].y);
@@ -397,8 +391,8 @@ class NodesGrid extends Grid {
             return;
         }
         let p = this.currentState.prevPath;
-        let rerender = p.slice(p.length - this.currentState.newNodes - 1, p.length);
-        this.drawPath(context, rerender);
+        let redraw = p.slice(p.length - this.currentState.newNodes - 1, p.length);
+        this.drawPath(context, redraw);
         this.currentState.dirty = false;
     }
 }
@@ -406,13 +400,18 @@ class NodesGrid extends Grid {
 class Gamefield extends Scene{
     constructor(canvasElement, gameManager) {
         super(canvasElement, gameManager);
+        this.context.fillStyle = STYLE_VALUES.BG_COLOR;
+        this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
     }
 
     initLevel(level) {
         this.currentLevel = level;
-        this.background = new Grid(100, 100, level.field.length, 32, BackgroundTile);
+        // TODO Center level
+        let oX = STYLE_VALUES.GAMEFIELD_OFFSET_X;
+        let oY = STYLE_VALUES.GAMEFIELD_OFFSET_Y;
+        this.background = new Grid(oX, oY, level.field.length, STYLE_VALUES.CELL_SIDE, BackgroundTile);
         this.addObject(this.background);
-        this.foreground = new NodesGrid(100, 100, level.field.length, 32, NodeTile, level.field);
+        this.foreground = new NodesGrid(oX, oY, level.field.length, STYLE_VALUES.CELL_SIDE, NodeTile, level.field);
         this.addObject(this.foreground);
     }
 
@@ -435,47 +434,70 @@ class Gamefield extends Scene{
             if (path[i].type == NodeTypes.ROAD) {
                 this.background.forceRedraw(path[i].x, path[i].y);
             }
+            else if (path[i].type == NodeTypes.DOT) {
+                this.foreground.forceRedraw(path[i].x, path[i].y);
+                this.background.forceRedraw(path[i].x, path[i].y);
+            }
         }
     }
 
     checkBound(clientX, clientY) {
-        if (clientX < this.foreground.x ||
-            clientX > this.foreground.x + this.foreground.gridSize * this.foreground.cellSize ||
-            clientY < this.foreground.y ||
-            clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize)
-        {
-            return false;
+        return !(clientX < this.foreground.x ||
+        clientX > this.foreground.x + this.foreground.gridSize * this.foreground.cellSize ||
+        clientY < this.foreground.y ||
+        clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize);
+
+    }
+
+    getCellCoordinates(clientX, clientY) {
+        let x = 0;
+        let y = 0;
+        if (clientX < this.foreground.x) {
+            x = 0;
         }
-        return true;
+        else if (clientX > this.foreground.x + this.foreground.gridSize * this.foreground.cellSize) {
+            x = this.foreground.gridSize - 1;
+        }
+        else {
+            x = (clientX - this.background.x) / this.background.cellSize | 0;
+        }
+        if (clientY < this.foreground.y) {
+            y = 0;
+        }
+        else if (clientY > this.foreground.y + this.foreground.gridSize * this.foreground.cellSize) {
+            y = this.foreground.gridSize - 1;
+        }
+        else {
+            y = (clientY - this.background.y) / this.background.cellSize | 0;
+        }
+        return [x, y];
     }
 
     onMouseDown(e) {
+        if (e.button != 0) {
+            return;
+        }
         let clientX = e.clientX - this.canvas.offsetLeft;
         let clientY = e.clientY - this.canvas.offsetTop;
         if (!this.checkBound(clientX, clientY)) {
             return;
         }
-        this.gm.fieldMouseDown((clientX - 100) / 32 | 0, (clientY - 100) / 32 | 0);
+        this.gm.fieldMouseDown((clientX - this.background.x) / this.background.cellSize | 0,
+            (clientY - this.background.y) / this.background.cellSize | 0);
     }
 
     onMouseUp(e) {
-        let clientX = e.clientX - this.canvas.offsetLeft;
-        let clientY = e.clientY - this.canvas.offsetTop;
-        if (!this.checkBound(clientX, clientY)) {
+        if (e.button != 0) {
             return;
         }
-        this.gm.fieldMouseUp((clientX - this.background.x) / this.background.cellSize | 0,
-            (clientY - this.background.y) / this.background.cellSize | 0);
+        this.gm.fieldMouseUp();
     }
 
     onMouseMove(e) {
         super.onMouseMove(e);
         let clientX = e.clientX - this.canvas.offsetLeft;
         let clientY = e.clientY - this.canvas.offsetTop;
-        if (!this.checkBound(clientX, clientY)) {
-            return;
-        }
-        this.gm.fieldMouseMove((clientX - this.background.x) / this.background.cellSize | 0,
-            (clientY - this.background.y) / this.background.cellSize | 0);
+        let cellCoords = this.getCellCoordinates(clientX, clientY);
+        this.gm.fieldMouseMove(cellCoords[0], cellCoords[1]);
     }
 }
