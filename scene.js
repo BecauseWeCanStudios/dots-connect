@@ -413,9 +413,8 @@ class Gamefield extends Scene{
 
     initLevel(level) {
         this.currentLevel = level;
-        // TODO Center level
-        let oX = STYLE_VALUES.GAMEFIELD_OFFSET_X;
-        let oY = STYLE_VALUES.GAMEFIELD_OFFSET_Y;
+        let oX = (this.context.canvas.width / 2) - ((level.field[0].length * STYLE_VALUES.CELL_SIDE) / 2) + 0.5;
+        let oY = (this.context.canvas.height / 2) - ((level.field[0].length * STYLE_VALUES.CELL_SIDE) / 2) + 0.5;
         this.background = new Grid(oX, oY, level.field.length, STYLE_VALUES.CELL_SIDE, BackgroundTile);
         this.addObject(this.background);
         this.foreground = new NodesGrid(oX, oY, level.field.length, STYLE_VALUES.CELL_SIDE, NodeTile, level.field);
