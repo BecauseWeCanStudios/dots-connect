@@ -62,18 +62,12 @@ class Level {
         return -1;
     }
 
-    clearPath(color) {
-        let index = this.pathIndex(color);
-        if (index < 0)
-            return;
-        let path = this.paths[index];
+    clearPath(path) {
         if (!path)
             return;
         for (let i = 0; i < path.length; ++i)
             if (path[i].type == NodeTypes.ROAD)
                 this.field[path[i].y][path[i].x].color = 0;
-        this.paths.splice(index, 1);
-        return path;
     }
 
     checkPath(color) {
@@ -91,6 +85,15 @@ class Level {
                 if (!this.field[i][j].color || (this.canStartEnd(j, i) && !this.checkPath(this.field[i][j].color)))
                     return false;
         return true;
+    }
+
+    extractPath(color) {
+        let index = this.pathIndex(color);
+        if (index < 0)
+            return null;
+        let path = this.paths[index];
+        this.paths.splice(index, 1);
+        return path;
     }
 
 }
@@ -128,12 +131,35 @@ class Game {
         this.scene.initLevel(this.level);
     }
 
+    cutPath(x, y, path) {
+        let cut = [];
+        while (path.length > 1 && (last(path).x != x || last(path).y != y)) {
+            if (!this.level.canStartEnd(last(path).x, last(path).y))
+                this.level.placeColor(last(path).x, last(path).y, 0);
+            cut.push(last(path));
+            path.pop();
+        }
+        if (path.length == 1) 
+            cut.push(path[0]);
+        return cut;
+    }
+
     startPath(x, y) {
         let color = this.level.nodeColor(x, y);
-        let removedPath = this.level.clearPath(color);
-        if (removedPath) {
-            this.scene.clearPath(removedPath);
+        let path = this.level.extractPath(color);
+        if (path) {
+            if (Game.isInPath(x, y, path) && !this.level.canStartEnd(x, y)) {
+                this.scene.clearPath(this.cutPath(x, y, path));
+                this.currentPath = path;
+            }
+            else {
+                this.scene.clearPath(this.cutPath(-1, -1, path));
+                this.currentPath = [new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y)];                
+            }
+            return true;
         }
+        if (!this.level.canStartEnd(x, y))
+            return false;
         this.currentPath = [];
         this.currentPath.push(new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y));
         return true;
@@ -147,6 +173,13 @@ class Game {
             if (nx == last(this.currentPath).x && ny == last(this.currentPath).y)
                 return true;
         }
+        return false;
+    }
+
+    static isInPath(x, y, path) {
+        for (let i = 0; i < path.length; ++i)
+            if (x == path[i].x && y == path[i].y)
+                return true;
         return false;
     }
 
@@ -169,6 +202,8 @@ class Game {
             this.currentPath.push(new PathNode(NodeTypes.DOT, this.currentPath[0].color, x, y));
             return true;
         }
+        if (!Game.isInPath(x, y, this.currentPath))
+            return false;
         while (this.currentPath.length > 1 && (last(this.currentPath).x != x || last(this.currentPath).y != y)) {
             if (!this.level.canStartEnd(last(this.currentPath).x, last(this.currentPath).y))
                 this.level.placeColor(last(this.currentPath).x, last(this.currentPath).y, 0);
@@ -182,7 +217,7 @@ class Game {
     }
 
     fieldMouseDown(x, y) {
-        if (!this.isGameFinished && this.level.canStartEnd(x, y) && this.startPath(x, y)) {
+        if (!this.isGameFinished && this.startPath(x, y)) {
             this.isMouseDown = true;
             this.scene.updateLevel();
         }
@@ -203,6 +238,7 @@ class Game {
             this.scene.updateLevel();
             $('header').style = '';
         }
+        this.currentPath = [];
         this.isMouseDown = false;
     }
 }
