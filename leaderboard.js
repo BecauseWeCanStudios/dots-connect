@@ -1,3 +1,5 @@
+"use strict";
+
 const LEADERBOARD_SIZE = 10;
 
 class Leaderboard {
@@ -6,43 +8,28 @@ class Leaderboard {
         this.db = fbApp.database();
     }
 
-    refreshScores (callback) {
-        this.db.ref('leaderboard').orderByValue().limitToLast(LEADERBOARD_SIZE).once('value', (snapshot) => {
+    getUserInfo (username, callback) {
+        this.db.ref('userdata/' + username).once('value', (snapshot) => {
+            callback(snapshot.val());
+        });
+    }
+
+    getHighScores (callback) {
+        this.db.ref('userdata').orderByChild('totalScore').limitToLast(LEADERBOARD_SIZE).once('value', (snapshot) => {
             var board = [];
             snapshot.forEach((data) => {
-                board.push({user: data.key, score: data.val()});
+                board.push({user: data.key, data: data.val()});
             });
             board.reverse();
             callback(board);
         });
     }
 
-    updateScore (username, score) {
-        this.db.ref('leaderboard/' + username).on('value', (snapshot) => {
-            this.db.ref('leaderboard/' + username).set(Math.max(score, snapshot.val()));
+    updateUserScore (username, level, score, totalScore) {
+        this.db.ref('userdata/' + username + '/totalScore').once('value', (snapshot) => {
+            this.db.ref('userdata/' + username + '/totalScore').set(Math.max(snapshot.val(), totalScore));
         });
-    }
-
-    updatePassedLevel (username, levelNumber) {
-        this.db.ref('passedLevels/' + username + '/' + levelNumber.toString()).set(1);
-    }
-
-    getPassedLevels (username, callback) {
-        this.db.ref('passedLevels/' + username + '/').orderByKey().once('value', (snapshot) => {
-            var levels = [];
-            snapshot.forEach((data) => {
-                levels.push(data.key * 1);
-            });
-            callback(levels);
-        });
-    }
-
-    getUserInfo (username, callback) {
-        this.getPassedLevels(username, (levels) => {
-            this.db.ref('leaderboard/' + username).on('value', (snapshot) => {
-                callback({score: snapshot.val(), levels: levels});
-            });
-        })
+        this.db.ref('userdata/' + username + '/levels/' + level.toString()).set(score);
     }
 
 }
