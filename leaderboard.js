@@ -32,4 +32,9 @@ class Leaderboard {
         this.db.ref('userdata/' + username + '/levels/' + level.toString()).set(score);
     }
 
+    addUser (username) {
+        this.db.ref('userdata/' + username + '/totalScore').set(0);
+        this.db.ref('userdata/' + username + '/levels/').set({});
+    }
+
 }
