@@ -392,7 +392,7 @@ class NodesGrid extends Grid {
                 if (newOrientation != orientation || i == path.length) {
                     console.log(context.lineCap);
                     curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
-                    context.lineTo(curCenter[0] - 0.5, curCenter[1] - 0.5);
+                    context.lineTo(curCenter[0], curCenter[1]);
                     orientation = newOrientation;
                 }
             }
