@@ -13,7 +13,7 @@ class Menu {
     constructor(parent, game) {
         this.parent = parent;
         this.game = game;
-        this.levelsCount = presetLevels.length + 1;
+        this.levelsCount = storage.levelCount() + 1;
         this.state = MenuStates.MAIN_MENU;
         this.createMenuDiv(parent);
     }
@@ -22,7 +22,6 @@ class Menu {
         let s = '';
         for (let i = 0; i < style.length; ++i)
             s += style[i][0] + ': ' + style[i][1] + '; ';
-        console.log(s);
         element.style = s;
     }
 

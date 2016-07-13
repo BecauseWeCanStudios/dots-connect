@@ -95,30 +95,6 @@ class Level {
 
 }
 
-var presetLevels = [
-    [[1, 0, 0],
-        [0, 0, 0],
-        [0, 0, 1]],
-
-    [[1, 0, 2],
-        [0, 0, 0],
-        [1, 2, 0]],
-
-    [[1, 0, 0, 0],
-        [2, 0, 3, 1],
-        [0, 0, 4, 0],
-        [2, 0, 3, 4]],
-    
-    [[1, 0, 0, 0, 0, 0, 0],
-     [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1]]
-    
-];
-
 class Game {
 
     constructor() {
@@ -146,9 +122,9 @@ class Game {
     startNewGame() {
         this.isGameFinished = false;
         this.currentPath = [];
-        this.level = new Level(this.levelNumber >= presetLevels.length ?
+        this.level = new Level(this.levelNumber >= storage.levelCount() ?
             this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
-            presetLevels[this.levelNumber]);
+            storage.level(this.levelNumber).puzzle);
         this.scene.initLevel(this.level);
     }
 
@@ -220,13 +196,13 @@ class Game {
 
     fieldMouseUp() {
         this.endPath();
-        if (last(this.currentPath).type == NodeTypes.DOT && this.level.checkAnswer()) {
+        if (this.isMouseDown && last(this.currentPath).type == NodeTypes.DOT && this.level.checkAnswer()) {
             this.isGameFinished = true;
+            this.isMouseDown = false;
             this.currentPath = [];
             this.scene.updateLevel();
             window.alert('YOU WON!!!');
         }
-
         this.isMouseDown = false;
     }
 }

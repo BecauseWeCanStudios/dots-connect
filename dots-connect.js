@@ -3,10 +3,12 @@ var playfield;
 var scene;
 var game;
 var menu;
+var storage;
 
 function init() {
 	playfield = document.getElementById('playfield');
     playfield.style.width = playfield.style.height = (Math.min(window.innerHeight, window.innerWidth) * 0.8 | 0) + 'px';
+    storage = new levelStorage();
     game = new Game();
     menu = new Menu(playfield, game);
     //scene = new Gamefield(initSceneCanvas('main-scene'), game);
