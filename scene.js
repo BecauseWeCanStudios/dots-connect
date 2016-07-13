@@ -97,17 +97,23 @@ class CoordinateDisplay extends DebugLabel {
 }
 
 class Scene {
-    constructor(canvasElement, gameManager) {
+    constructor(canvasElement, gameManager, debugLabels) {
         this.coorDisplay = new CoordinateDisplay(0, 12);
         this.objects = [];
-        this.overlayObjects = [new Framecounter(0, 0), this.coorDisplay];
-        this.framesDrawn = 0;
+        this.overlayObjects = [];
+        this.debug = debugLabels;
+        if (debugLabels) {
+            this.overlayObjects = [new Framecounter(0, 0), this.coorDisplay];
+            this.framesDrawn = 0;
+        }
         this.canvas = canvasElement;
         this.assignListeners(this.canvas);
         this.gm = gameManager;
         this.context = this.canvas.getContext('2d');
         this.requestAnimationFrame();
-        console.log('Scene "' + canvasElement.id + '" initialized');
+        if (debugLabels) {
+            console.log('Scene "' + canvasElement.id + '" initialized');
+        }
     }
 
     assignListeners(element) {
@@ -156,30 +162,42 @@ class Scene {
 
     // TODO Placeholders
     onMouseDown(e) {
-        console.log(e.type)
+        if (this.debug) {
+            console.log(e.type)
+        }
     }
 
     onMouseUp(e) {
-        console.log(e.type)
+        if (this.debug) {
+            console.log(e.type)
+        }
     }
 
     onMouseMove(e) {
-        let pos = this.getMouseCoords(e.clientX, e.clientY);
-        this.coorDisplay.updateCoords(pos[0], pos[1]);
+        if (this.debug) {
+            let pos = this.getMouseCoords(e.clientX, e.clientY);
+            this.coorDisplay.updateCoords(pos[0], pos[1]);
+        }
     }
 
     onMouseClick(e) {
-        console.log(e.type)
+        if (this.debug) {
+            console.log(e.type)
+        }
     }
 
     onMouseEnter(e) {
-        this.coorDisplay.updateVisibility(true);
-        let pos = this.getMouseCoords(e.clientX, e.clientY);
-        this.coorDisplay.updateCoords(pos[0], pos[1]);
+        if (this.debug) {
+            this.coorDisplay.updateVisibility(true);
+            let pos = this.getMouseCoords(e.clientX, e.clientY);
+            this.coorDisplay.updateCoords(pos[0], pos[1]);
+        }
     }
 
     onMouseLeave(e) {
-        this.coorDisplay.updateVisibility(false);
+        if (this.debug) {
+            this.coorDisplay.updateVisibility(false);
+        }
     }
 }
 
@@ -301,7 +319,6 @@ class NodesGrid extends Grid {
                     this.cellSize, this.cellSize, level[i][j].color);
             }
         }
-        console.log(level);
     }
 
     updateLevel(level, gm) {
@@ -405,8 +422,8 @@ class NodesGrid extends Grid {
 }
 
 class Gamefield extends Scene{
-    constructor(canvasElement, gameManager) {
-        super(canvasElement, gameManager);
+    constructor(canvasElement, gameManager, debugLabels) {
+        super(canvasElement, gameManager, debugLabels);
         this.context.fillStyle = STYLE_VALUES.BG_COLOR;
         this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
     }
