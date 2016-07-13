@@ -6,21 +6,34 @@ class leaderboard {
         this.db = fbApp.database();
     }
 
-    refresh (callback) {
+    refreshScores (callback) {
         this.db.ref('leaderboard').orderByValue().limitToLast(LEADERBOARD_SIZE).once('value', (snapshot) => {
-            this.board = [];
+            var board = [];
             snapshot.forEach((data) => {
-                this.board.push({user: data.key, score: data.val()});
+                board.push({user: data.key, score: data.val()});
             });
-            this.board.reverse();
-            if (callback)
-                callback(this.board);
+            board.reverse();
+            callback(board);
         });
     }
 
-    update (username, score) {
+    updateScore (username, score) {
         this.db.ref('leaderboard/' + username).on('value', (snapshot) => {
             this.db.ref('leaderboard/' + username).set(Math.max(score, snapshot.val()));
+        });
+    }
+
+    updatePassedLevel (username, levelNumber) {
+        this.db.ref('passedLevels/' + username + '/' + levelNumber.toString()).set(1);
+    }
+
+    getPassedLevels (username, callback) {
+        this.db.ref('passedLevels/' + username + '/').orderByKey().once('value', (snapshot) => {
+            var levels = [];
+            snapshot.forEach((data) => {
+                levels.push(data.key * 1);
+            });
+            callback(levels);
         });
     }
 
