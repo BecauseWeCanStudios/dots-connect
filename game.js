@@ -74,7 +74,7 @@ class Level {
 
     checkPath(color) {
         let path = this.paths[this.pathIndex(color)];
-        return path && last(path).type == NodeTypes.DOT;
+        return path && path.length > 1 && last(path).type == NodeTypes.DOT;
     }
 
     addPath(path) {
@@ -209,7 +209,7 @@ class Game {
             this.currentPath.push(new PathNode(NodeTypes.ROAD, this.currentPath[0].color, x, y));
             return true;
         }
-        if (this.currentPath.length == 1)
+        if (this.currentPath.length == 1 && !this.level.canStartEnd(x, y))
             return false;
         if (this.level.canStartEnd(x, y) && (x != this.currentPath[0].x || y != this.currentPath[0].y)
             && this.canContinue(x, y)) {
