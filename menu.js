@@ -106,8 +106,7 @@ class Menu {
     createMenuDiv() {
         this.menuDiv = Menu.createElement('div', [['id', 'menu-div']], [], '');
         this.menuDiv.appendChild(Menu.createElement('label', [['id', 'title-label']], [], 'DOTS CONNECT'));
-        let input = Menu.createElement('input', [['id', 'nickname-input']], [], '');
-        input.value = 'Nickname';
+        let input = Menu.createElement('input', [['id', 'nickname-input'], ['placeholder','nickname']], [], '');
         this.menuDiv.appendChild(input);
         let button = Menu.createElement('button', [['id', 'new-game-button'], ['class', 'glowEnabledGreen']], [], 'NEW GAME');
         Menu.assignListeners(button, [['click', this.newGameClick.bind(this)]]);
