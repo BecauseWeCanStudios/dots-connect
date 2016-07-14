@@ -165,7 +165,6 @@ class Game {
         let color = this.level.nodeColor(x, y);
         let path = this.level.extractPath(color);
         if (path) {
-            this.pathsRestarts += 1;
             if (Game.isInPath(x, y, path) && !this.level.canStartEnd(x, y)) {
                 this.currentPath = path;
                 this.scene.updateLevel();
@@ -174,6 +173,7 @@ class Game {
                 this.scene.updateLevel();
             }
             else {
+                this.pathsRestarts += 1;
                 this.scene.clearPath(this.cutPath(-1, -1, path));
                 this.currentPath = [new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y)];
             }
@@ -239,10 +239,10 @@ class Game {
                 if (this.level.field[i][j].color && this.level.field[i][j].type != NodeTypes.DOT)
                     res += 1;
         let max = 0;
-        for (let i = 0; i < this.level.paths.length; ++i) 
-            max = Math.max(max, this.level.paths[i].length);
-        res += max * 10;
-        res = Math.ceil(res *  Math.pow(0.95, this.pathsRestarts));
+        for (let i = 0; i < this.level.paths.length; ++i)
+            if (this.level.checkPath(this.level.paths[i][0].color))
+                max = Math.max(max, this.level.paths[i].length);
+        res += Math.ceil((max * 10) * Math.pow(0.95, this.pathsRestarts));
         return res;
     }
 
