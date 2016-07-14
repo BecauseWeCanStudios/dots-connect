@@ -139,10 +139,7 @@ class Menu {
             this.game.scene.canvas.remove();
             this.state -= 1;
             this.currentLevel += 1;
-            if (this.currentLevel < this.levelsCount - 1)
-                this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: 0';
-            else
-                this.scoreLabel.innerHTML = 'RANDOM SCORE: 0';
+            this.setScore(0);
             this.startGame();
             return;
         }
@@ -169,9 +166,9 @@ class Menu {
                 this.game.scene.canvas.className = 'fadeIn';
                 this.nextLevelButton.remove();
                 this.resetButton.remove();
-                this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + this.userInfo.totalScore;
-                this.updateScoreLabel();
                 this.state = MenuStates.LEVEL_SELECT;
+                this.setScore(this.userInfo.totalScore);
+                this.updateScoreLabel();
                 break;
             case MenuStates.LEADERBOARD:
                 this.state = MenuStates.MAIN_MENU;
@@ -220,10 +217,7 @@ class Menu {
         this.state = MenuStates.GAME;
         this.currentLevel = Number(event.target.id);
         this.levelButtonsDiv.style.opacity = 0;
-        if (this.currentLevel < this.levelsCount - 1)
-            this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: 0';
-        else
-            this.scoreLabel.innerHTML = 'RANDOM SCORE: 0';            
+        this.setScore(0);           
         this.updateScoreLabel();
         this.nextLevelButton = this.createButton('next-level-button', this.nextLevelButtonClick, '→', 1.5, 4);
         this.resetButton = this.createButton('reset-button', this.resetButtonClick, '↺', 1.5, 7);
@@ -291,7 +285,7 @@ class Menu {
         this.spinner.stop();
         this.userInfo = userInfo;
         this.nickname = nickname;
-        this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + userInfo.totalScore;
+        this.setScore(userInfo.totalScore);
         this.game.clearCompletedLevels();
         if (userInfo.levels !== undefined) 
             this.game.updateLevelsCompletion(userInfo.levels);
@@ -350,14 +344,6 @@ class Menu {
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
         Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
         Menu.tryUpdate(this.leaderboardDiv, this.updateLeaderboradDiv.bind(this));
-    }
-    
-    setScore(score) {
-        if (this.currentLevel < this.levelsCount - 1)
-            this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + ' SCORE: ' + score;
-        else
-            this.scoreLabel.innerHTML = 'RANDOM SCORE: ' + score;
-        this.updateScoreLabel();
     }
 
     updateScoreLabel() {
@@ -444,5 +430,20 @@ class Menu {
         $('main-container').appendChild(button);
         this.updateButton(button, mx, my, 4);
         return button;
+    }
+    
+    setScore(score) {
+        if (this.state == MenuStates.GAME) {
+            let s = '';
+            s += ' HIGH-SCORE: ' + (this.userInfo && this.userInfo.levels &&
+                this.userInfo.levels[this.currentLevel] ? this.userInfo.levels[this.currentLevel] : 0);
+            if (this.currentLevel < this.levelsCount - 1)
+                this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + s + ' SCORE: ' + score;
+            else
+                this.scoreLabel.innerHTML = 'RANDOM SCORE: ' + score;
+        }
+        else 
+            this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + score;
+        this.updateScoreLabel();
     }
 }
