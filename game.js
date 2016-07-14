@@ -30,7 +30,9 @@ class PathNode extends Node {
 
 class Level {
 
-    constructor(field) {
+    constructor(levelInfo) {
+        this.levelInfo = levelInfo;
+        let field = levelInfo.puzzle;
         this.field = new Array(field.length);
         for (let i = 0; i < field.length; ++i) {
             let row = new Array(field[i].length);
@@ -138,8 +140,8 @@ class Game {
         this.isGameFinished = false;
         this.currentPath = [];
         this.level = new Level(this.levelNumber >= storage.levelCount() ?
-            this.generator.generate(this.levelWidth, this.levelHeight).puzzle :
-            storage.level(this.levelNumber).puzzle);
+            this.generator.generate(this.levelWidth, this.levelHeight) :
+            storage.level(this.levelNumber));
         this.scene.initLevel(this.level);
     }
 
