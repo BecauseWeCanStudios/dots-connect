@@ -9,7 +9,7 @@ class Leaderboard {
     }
 
     getUserInfo (username, callback) {
-        this.db.ref('userdata/' + username).once('value', (snapshot) => {
+        this.db.ref('userdata/' + encodeURIComponent(username)).once('value', (snapshot) => {
             callback(username, snapshot.val());
         });
     }
@@ -26,15 +26,15 @@ class Leaderboard {
     }
 
     updateUserScore (username, level, score, totalScore) {
-        this.db.ref('userdata/' + username + '/totalScore').once('value', (snapshot) => {
-            this.db.ref('userdata/' + username + '/totalScore').set(Math.max(snapshot.val(), totalScore));
+        this.db.ref('userdata/' + encodeURIComponent(username) + '/totalScore').once('value', (snapshot) => {
+            this.db.ref('userdata/' + encodeURIComponent(username) + '/totalScore').set(Math.max(snapshot.val(), totalScore));
         });
-        this.db.ref('userdata/' + username + '/levels/' + level.toString()).set(score);
+        this.db.ref('userdata/' + encodeURIComponent(username) + '/levels/' + level.toString()).set(score);
     }
 
     addUser (username) {
-        this.db.ref('userdata/' + username + '/totalScore').set(0);
-        this.db.ref('userdata/' + username + '/levels/').set({});
+        this.db.ref('userdata/' + encodeURIComponent(username) + '/totalScore').set(0);
+        this.db.ref('userdata/' + encodeURIComponent(username) + '/levels/').set({});
     }
 
 }
