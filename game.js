@@ -103,6 +103,7 @@ class Level {
 class Game {
 
     constructor() {
+        this.pathsRestarts = 0;
         this.isMouseDown = false;
         this.isGameFinished = false;
         this.generator = new Generator();
@@ -153,8 +154,10 @@ class Game {
             cut.push(last(path));
             path.pop();
         }
-        if (path.length == 1) 
+        if (path.length == 1) {
             cut.push(path[0]);
+            path.pop();
+        }
         return cut;
     }
 
@@ -162,6 +165,7 @@ class Game {
         let color = this.level.nodeColor(x, y);
         let path = this.level.extractPath(color);
         if (path) {
+            this.pathsRestarts += 1;
             if (Game.isInPath(x, y, path) && !this.level.canStartEnd(x, y)) {
                 this.scene.clearPath(this.cutPath(x, y, path));
                 this.currentPath = path;
@@ -232,6 +236,11 @@ class Game {
             for (let j = 0; j < this.level.field[i].length; ++j) 
                 if (this.level.field[i][j].color && this.level.field[i][j].type != NodeTypes.DOT)
                     res += 1;
+        let max = 0;
+        for (let i = 0; i < this.level.paths.length; ++i) 
+            max = Math.max(max, this.level.paths[i].length);
+        res += max * 10;
+        res = Math.ceil(res *  Math.pow(0.95, this.pathsRestarts));
         return res;
     }
 
@@ -255,8 +264,11 @@ class Game {
     }
     
     resetLevel() {
+        if (this.isGameFinished)
+            return;
         for (let i = 0; i < this.level.paths.length; ++i)
             this.scene.clearPath(this.cutPath(-1, -1, this.level.paths[i]));
+        this.pathsRestarts = 0;
         menu.setScore(this.getScore());
     }
 

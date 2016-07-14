@@ -275,7 +275,7 @@ class Menu {
             else 
                 buttonClass = 'locked';
             let button = Menu.createElement('button', [['id', i.toString()], ['class', buttonClass]], 
-                [], i != this.levelsCount - 1 ? (i + 1).toString() : '?');
+                [], i != this.levelsCount - 1 ? (i + 1).toString() : '🎲');
             Menu.assignListeners(button, [['click', this.levelButtonClick.bind(this)]]);
             this.levelButtonsDiv.appendChild(button);
         }
@@ -310,7 +310,6 @@ class Menu {
         }
         this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         window.document.cookie = JSON.stringify({nickname: this.nickname});
-        this.createBackButton();
         this.menuDiv.style.opacity = 0;
     }
     
@@ -386,7 +385,7 @@ class Menu {
         if (this.isClicked) return;
         this.isClicked = true;
         this.state = MenuStates.LEADERBOARD;
-        this.backButton = this.createButton('back-button', this.backButtonClick, '✖', 1.5, 1);
+        this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         this.menuDiv.style.opacity = 0;                
     }
     
