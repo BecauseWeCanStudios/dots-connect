@@ -297,7 +297,7 @@ class Menu {
         if (this.isClicked) return;
         this.isClicked = true;
         this.state = MenuStates.LEVEL_SELECT;
-        this.nickname = $('nickname-input').value;
+        this.nickname = $('nickname-input').value.replace(/<(?:.|\n)*?>/gm, '');
         if (!this.nickname) {
             this.isClicked = false;
             return;
