@@ -161,7 +161,9 @@ class Menu {
             case MenuStates.LEVEL_SELECT:
                 this.state = MenuStates.MAIN_MENU;
                 this.backButton.remove();
+                this.updateLevelButtons();
                 this.levelButtonsDiv.style.opacity = 0;
+                console.log(this.menuDiv);
                 break;
             case MenuStates.GAME:
                 //GameField destroy
@@ -177,6 +179,7 @@ class Menu {
             case MenuStates.LEADERBOARD:
                 this.state = MenuStates.MAIN_MENU;
                 this.backButton.remove();
+                this.updateLeaderboradDiv();
                 this.leaderboardDiv.style.opacity = 0;
                 break;
         }
@@ -309,7 +312,7 @@ class Menu {
         this.nickname = input.value.replace(/<(?:.|\n)*?>/gm, '');
         if (!this.nickname) {
             this.isClicked = false;
-            $('nickname-input').className = 'wrongInput'
+            input.className = 'wrongInput';
             return;
         }
        input.className = '';
@@ -416,7 +419,6 @@ class Menu {
         let table = Menu.createElement('table', [['id', 'leaderboard-table']], [], '');
         this.parent.appendChild(this.leaderboardDiv);
         for (let i = 0; i < leaderboardData.length; ++i) {
-            console.log(leaderboardData);
             let row = Menu.createElement('tr', [], [], '');
             row.appendChild(Menu.createElement('td', [], [], decodeURIComponent(leaderboardData[i].user)));
             row.appendChild(Menu.createElement('td', [['id', 'score-col']], [], leaderboardData[i].data.totalScore));
