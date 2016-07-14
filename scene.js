@@ -344,21 +344,18 @@ class NodesGrid extends Grid {
             (curPath.length == 1 && (isDef(prevPath)))) {
             // Updating current path
             if (curPath.length > prevPath.length) {
-                this.currentState.newNodes = curPath.length - prevPath.length;
-                if (curPath.length > 2) {
-                    // Redraws one more cell for looks
-                    this.currentState.newNodes++;
-                }
+                this.currentState.newNodes = curPath.length - prevPath.length + 2;
                 this.currentState.dirty = true;
             } else {
-                for (let i = prevPath.length - 1; i >= curPath.length - 1; i--) {
+                for (let i = prevPath.length - 1; i >= curPath.length - 1; i--)
+                {
                     let eid = this.getElementId(prevPath[i].x, prevPath[i].y);
                     if (prevPath[i].type == NodeTypes.DOT) {
                         this.forceRedraw(eid);
                     }
                     changed[changed.length] = eid;
                 }
-                this.currentState.newNodes = 1; // Redraw latest element
+                this.currentState.newNodes = changed.length + 1; // Redraw latest element
                 this.currentState.dirty = true;
             }
             this.currentState.prevPath = curPath.slice();
@@ -421,7 +418,7 @@ class NodesGrid extends Grid {
             return;
         }
         let p = this.currentState.prevPath;
-        let redraw = p.slice(p.length - this.currentState.newNodes - 1, p.length);
+        let redraw = p.slice(-this.currentState.newNodes);
         this.drawPath(context, redraw);
         this.currentState.dirty = false;
     }
