@@ -329,6 +329,7 @@ class NodesGrid extends Grid {
         if (this.dirtyPaths.length > level.paths.length) {
             // TODO Handle addition and removal of paths
         }
+
         let curPath = gm.currentPath;
         let prevPath = this.currentState.prevPath;
         if (curPath.length == 0 || (isDef(this.currentState.color) && this.currentState.color != curPath[0].color)) {
@@ -360,7 +361,7 @@ class NodesGrid extends Grid {
             }
             this.currentState.prevPath = curPath.slice();
         }
-        else if (curPath.length == 1 && (!isDef(this.currentState.color))) {
+        else if (curPath.length >= 1 && (!isDef(this.currentState.color))) {
             // New currentPath initialization
             this.currentState.color = curPath[0].color;
             this.currentState.dirty = false; // Nothing to draw yet

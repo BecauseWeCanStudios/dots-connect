@@ -167,18 +167,20 @@ class Game {
         if (path) {
             this.pathsRestarts += 1;
             if (Game.isInPath(x, y, path) && !this.level.canStartEnd(x, y)) {
-                this.scene.clearPath(this.cutPath(x, y, path));
                 this.currentPath = path;
+                this.scene.updateLevel();
+                this.cutPath(x, y, path);
+                this.currentPath = path;
+                this.scene.updateLevel();
             }
             else {
                 this.scene.clearPath(this.cutPath(-1, -1, path));
-                this.currentPath = [new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y)];                
+                this.currentPath = [new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y)];
             }
             return true;
         }
         if (!this.level.canStartEnd(x, y))
             return false;
-        this.currentPath = [];
         this.currentPath.push(new PathNode(NodeTypes.DOT, this.level.nodeColor(x, y), x, y));
         return true;
     }
