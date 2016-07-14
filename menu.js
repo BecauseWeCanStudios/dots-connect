@@ -55,6 +55,9 @@ class Menu {
         this.state = MenuStates.MAIN_MENU;
         this.parent.style.width = this.parent.style.height = 
             Math.ceil(Math.min(window.innerHeight, window.innerWidth)) * 0.8 + 'px';
+        opts.radius = Math.ceil(this.parent.offsetHeight * 0.20);
+        opts.width = Math.ceil(opts.radius * 0.30);
+        $('header').style.fontSize = Math.floor((window.innerHeight - this.parent.offsetHeight) / 2) + 'px';
         window.onresize = this.updateAll.bind(this);
         this.createScoreLabel();
         this.createMenuDiv(parent);
@@ -117,7 +120,7 @@ class Menu {
     createMenuDiv() {
         this.menuDiv = Menu.createElement('div', [['id', 'menu-div']], [], '');
         this.menuDiv.appendChild(Menu.createElement('label', [['id', 'title-label']], [], 'DOTS CONNECT'));
-        let input = Menu.createElement('input', [['id', 'nickname-input'], ['placeholder','nickname']], [], '');
+        let input = Menu.createElement('input', [['id', 'nickname-input'], ['placeholder','nickname'], ['maxlength', 10]], [], '');
         if (this.nickname) 
             input.value = this.nickname;
         this.menuDiv.appendChild(input);
@@ -337,6 +340,8 @@ class Menu {
     updateAll() {
         this.parent.style.width = this.parent.style.height =
             Math.ceil(Math.min(window.innerHeight, window.innerWidth)) * 0.8 + 'px';
+        opts.radius = Math.ceil(this.parent.offsetHeight * 0.20);
+        opts.width = Math.ceil(opts.radius * 0.30);
         Menu.tryUpdate(this.menuDiv, this.updateMenuDiv.bind(this));
         this.updateButton(this.backButton, 1.5, 1);
         this.updateButton(this.nextLevelButton, 1.5, 4);
@@ -344,6 +349,7 @@ class Menu {
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
         Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
         Menu.tryUpdate(this.leaderboardDiv, this.updateLeaderboradDiv.bind(this));
+        $('header').style.fontSize =  Math.floor((window.innerHeight - this.parent.offsetHeight) / 2) + 'px';
     }
 
     updateScoreLabel() {
@@ -381,9 +387,11 @@ class Menu {
     }
 
     updateLeaderboradDiv() {
+        if (!this.leaderboardDiv)
+            return;
         let fontSize = this.parent.offsetHeight * 0.07;
         let minFont = this.parent.offsetHeight * 0.03;
-        let table = $('leaderboard-div').firstChild;
+        let table = this.leaderboardDiv.firstChild;
         let num = 0;
         let row = table.firstChild;
         while (row) {
