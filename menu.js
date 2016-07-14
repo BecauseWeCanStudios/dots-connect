@@ -416,7 +416,7 @@ class Menu {
         for (let i = 0; i < leaderboardData.length; ++i) {
             console.log(leaderboardData);
             let row = Menu.createElement('tr', [], [], '');
-            row.appendChild(Menu.createElement('td', [], [], leaderboardData[i].user));
+            row.appendChild(Menu.createElement('td', [], [], decodeURIComponent(leaderboardData[i].user)));
             row.appendChild(Menu.createElement('td', [['id', 'score-col']], [], leaderboardData[i].data.totalScore));
             table.appendChild(row);
         }
