@@ -164,6 +164,7 @@ class Game {
     startPath(x, y) {
         let color = this.level.nodeColor(x, y);
         let path = this.level.extractPath(color);
+        this.currentPath = [];
         if (path) {
             if (Game.isInPath(x, y, path) && !this.level.canStartEnd(x, y)) {
                 this.currentPath = path;
@@ -280,9 +281,9 @@ class Game {
             this.isGameFinished = true;
             this.isMouseDown = false;
             this.currentPath = [];
+            $('header').style = '';
             menu.completeLevel();
             this.scene.updateLevel();
-            $('header').style = '';
         }
         menu.setScore(this.getScore());
         this.currentPath = [];

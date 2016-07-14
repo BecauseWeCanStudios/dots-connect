@@ -59,6 +59,7 @@ class Menu {
         opts.width = Math.ceil(opts.radius * 0.30);
         $('header').style.fontSize = Math.floor((window.innerHeight - this.parent.offsetHeight) / 2) + 'px';
         window.onresize = this.updateAll.bind(this);
+        this.scaleCompletionSign();
         this.createScoreLabel();
         this.createMenuDiv(parent);
     }
@@ -180,6 +181,10 @@ class Menu {
                 break;
         }
     }
+
+    scaleCompletionSign() {
+        $('header').style.fontSize =  Math.floor((window.innerHeight - this.parent.offsetHeight) / 2) + 'px';
+    }
     
     animationEnd() {
         this.isClicked = false;
@@ -300,13 +305,14 @@ class Menu {
         if (this.isClicked) return;
         this.isClicked = true;
         this.state = MenuStates.LEVEL_SELECT;
-        this.nickname = $('nickname-input').value.replace(/<(?:.|\n)*?>/gm, '');
+        let input = $('nickname-input');
+        this.nickname = input.value.replace(/<(?:.|\n)*?>/gm, '');
         if (!this.nickname) {
             this.isClicked = false;
             $('nickname-input').className = 'wrongInput'
             return;
         }
-        $('nickname-input').className = '';
+       input.className = '';
         this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         window.document.cookie = JSON.stringify({nickname: this.nickname});
         this.menuDiv.style.opacity = 0;
@@ -320,6 +326,7 @@ class Menu {
     completeLevel() {
         if (this.currentLevel >= this.levelsCount - 1)
             return;
+        this.scaleCompletionSign();
         let pre_score = 0, cur_score = this.game.getScore();
         if (this.userInfo && this.userInfo.levels) {
             if (this.currentLevel < this.userInfo.levels.length) {
@@ -351,7 +358,6 @@ class Menu {
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
         Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
         Menu.tryUpdate(this.leaderboardDiv, this.updateLeaderboradDiv.bind(this));
-        $('header').style.fontSize =  Math.floor((window.innerHeight - this.parent.offsetHeight) / 2) + 'px';
     }
 
     updateScoreLabel() {
@@ -418,6 +424,7 @@ class Menu {
         }
         this.leaderboardDiv.appendChild(table);
         this.updateLeaderboradDiv();
+        this.scaleCompletionSign();
     }
     
     updateButton(button, mx, my) {
