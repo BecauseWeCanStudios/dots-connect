@@ -303,8 +303,10 @@ class Menu {
         this.nickname = $('nickname-input').value.replace(/<(?:.|\n)*?>/gm, '');
         if (!this.nickname) {
             this.isClicked = false;
+            $('nickname-input').className = 'wrongInput'
             return;
         }
+        $('nickname-input').className = '';
         this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         window.document.cookie = JSON.stringify({nickname: this.nickname});
         this.menuDiv.style.opacity = 0;

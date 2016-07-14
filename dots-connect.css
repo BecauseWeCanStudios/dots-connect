@@ -105,6 +105,15 @@ td {
     }
 }
 
+@keyframes menuErrorPulsing {
+    from {
+        box-shadow: 0 0 10px 1px rgba(128, 0, 0, 0.7);
+    }
+    to {
+        box-shadow: 0 0 10px 10px rgba(128, 0, 0, 0.7);
+    }
+}
+
 @keyframes backButtonPulsing {
     from {
         box-shadow: 0 0 10px 1px rgba(255, 165, 0, 0.7);
@@ -190,6 +199,15 @@ button.locked {
     transition: box-shadow 0.3s, border 0.3s;
     border: orange solid 1px;
     box-shadow: 0 0 10px 1px rgba(255, 165, 0, 0.7);
+}
+
+#nickname-input.wrongInput {
+    border: red solid 1px;
+    box-shadow: 0 0 10px 1px rgba(128, 0, 0, 0.7);
+}
+
+#nickname-input.wrongInput:hover {
+    animation: menuErrorPulsing linear 0.7s infinite alternate;
 }
 
 #new-game-button.glowEnabledGreen, #score-board-button.glowEnabledGreen, button, input {
