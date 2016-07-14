@@ -387,7 +387,6 @@ class NodesGrid extends Grid {
             for (let i = 1; i <= path.length; i++) {
                 let newOrientation = (isDef(path[i]) && path[i - 1].x - path[i].x == 0) ? 1 : 2;
                 if (newOrientation != orientation || i == path.length) {
-                    console.log(context.lineCap);
                     curCenter = this.getCenter(path[i - 1].x, path[i - 1].y);
                     context.lineTo(curCenter[0] + 0.5, curCenter[1] + 0.5);
                     orientation = newOrientation;
