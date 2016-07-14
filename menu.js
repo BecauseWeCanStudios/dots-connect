@@ -36,7 +36,17 @@ var opts = {
 class Menu {
 
     constructor(parent, game) {
-        this.nickname = '';
+        let userdata;
+        try {
+            userdata = JSON.parse(window.document.cookie);
+        }
+        catch(err) { }
+        if (userdata && userdata.nickname) {
+            this.nickname = userdata.nickname;
+        }
+        else {
+            this.nickname = '';
+        }
         this.spinner = new Spinner(opts);
         this.isClicked = true;
         this.parent = parent;
@@ -299,6 +309,8 @@ class Menu {
             return;
         }
         this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
+        window.document.cookie = JSON.stringify({nickname: this.nickname});
+        this.createBackButton();
         this.menuDiv.style.opacity = 0;
     }
     
