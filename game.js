@@ -253,6 +253,12 @@ class Game {
             this.scene.updateLevel();
         }
     }
+    
+    resetLevel() {
+        for (let i = 0; i < this.level.paths.length; ++i)
+            this.scene.clearPath(this.cutPath(-1, -1, this.level.paths[i]));
+        menu.setScore(this.getScore());
+    }
 
     fieldMouseUp() {
         this.endPath();

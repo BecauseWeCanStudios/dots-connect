@@ -123,25 +123,6 @@ class Menu {
         this.parent.appendChild(this.menuDiv);
         this.updateMenuDiv();
     }
-
-    updateBackButton() {
-        let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
-        Menu.setElementStyle($('back-button'), [
-            ['width', buttonSize + 'px'],
-            ['height', buttonSize + 'px'],
-            ['top', this.parent.offsetHeight - buttonSize + 'px'],
-            ['left', this.parent.offsetWidth + buttonSize * 1.5 + 'px'],
-            ['font-size', buttonSize * 0.5 + 'px'],
-            ['line-height', buttonSize * 0.5 + 'px']
-        ]);
-    }
-
-    createBackButton() {
-        this.backButton = Menu.createElement('button', [['id', 'back-button']], [], '✖');
-        Menu.assignListeners(this.backButton, [['click', this.backButtonClick.bind(this)]]);
-        $('main-container').appendChild(this.backButton);
-        this.updateBackButton();
-    }
     
     sceneFadeAnimationEnd() {
         if (this.state == MenuStates.CHANGING_LEVEL) {
@@ -177,6 +158,7 @@ class Menu {
                 Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
                 this.game.scene.canvas.className = 'fadeIn';
                 this.nextLevelButton.remove();
+                this.resetButton.remove();
                 this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + this.userInfo.totalScore;
                 this.updateScoreLabel();
                 this.state = MenuStates.LEVEL_SELECT;
@@ -216,6 +198,10 @@ class Menu {
         this.game.startNewGame();
         this.isClicked = false;
     }
+    
+    resetButtonClick() {
+        this.game.resetLevel();        
+    }
 
     levelButtonClick(event) {
         if (this.isClicked || event.target.className == 'locked') return;
@@ -229,7 +215,8 @@ class Menu {
         else
             this.scoreLabel.innerHTML = 'RANDOM SCORE: 0';            
         this.updateScoreLabel();
-        this.createNextLevelButton();
+        this.nextLevelButton = this.createButton('next-level-button', this.nextLevelButtonClick, '→', 1.5, 4);
+        this.resetButton = this.createButton('reset-button', this.resetButtonClick, '↺', 1.5, 7);
     }
 
     nextLevelButtonClick() {
@@ -240,25 +227,6 @@ class Menu {
         $('header').style = 'display: none';
         Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
         this.game.scene.canvas.className = 'fadeIn';
-    }
-
-    updateNextLevelButton() {
-        let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
-        Menu.setElementStyle($('next-level-button'), [
-            ['width', buttonSize + 'px'],
-            ['height', buttonSize + 'px'],
-            ['top', this.parent.offsetHeight - buttonSize * 4 + 'px'],
-            ['left', this.parent.offsetWidth + buttonSize * 1.5 + 'px'],
-            ['font-size', buttonSize * 0.5 + 'px'],
-            ['line-height', buttonSize * 0.5 + 'px']
-        ]);
-    }
-
-    createNextLevelButton() {
-        this.nextLevelButton = Menu.createElement('button', [['id', 'next-level-button']], [], '→');
-        Menu.assignListeners(this.nextLevelButton, [['click', this.nextLevelButtonClick.bind(this)]]);
-        $('main-container').appendChild(this.nextLevelButton);
-        this.updateNextLevelButton();
     }
 
     updateLevelButtons() {
@@ -330,7 +298,7 @@ class Menu {
             this.isClicked = false;
             return;
         }
-        this.createBackButton();
+        this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         this.menuDiv.style.opacity = 0;
     }
     
@@ -365,8 +333,9 @@ class Menu {
         this.parent.style.width = this.parent.style.height =
             Math.ceil(Math.min(window.innerHeight, window.innerWidth)) * 0.8 + 'px';
         Menu.tryUpdate(this.menuDiv, this.updateMenuDiv.bind(this));
-        Menu.tryUpdate(this.backButton, this.updateBackButton.bind(this));
-        Menu.tryUpdate(this.nextLevelButton, this.updateNextLevelButton.bind(this));
+        this.updateButton(this.backButton, 1.5, 1);
+        this.updateButton(this.nextLevelButton, 1.5, 4);
+        this.updateButton(this.resetButton, 1.5, 7);
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
         Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
         Menu.tryUpdate(this.leaderboardDiv, this.updateLeaderboradDiv.bind(this));
@@ -405,7 +374,7 @@ class Menu {
         if (this.isClicked) return;
         this.isClicked = true;
         this.state = MenuStates.LEADERBOARD;
-        this.createBackButton();
+        this.backButton = this.createButton('back-button', this.backButtonClick, '✖', 1.5, 1);
         this.menuDiv.style.opacity = 0;                
     }
     
@@ -442,5 +411,27 @@ class Menu {
         }
         this.leaderboardDiv.appendChild(table);
         this.updateLeaderboradDiv();
+    }
+    
+    updateButton(button, mx, my) {
+        if (!button) 
+            return;
+        let buttonSize = Math.floor(this.parent.offsetWidth * 0.1);
+        Menu.setElementStyle(button, [
+            ['width', buttonSize + 'px'],
+            ['height', buttonSize + 'px'],
+            ['top', this.parent.offsetHeight - buttonSize * my + 'px'],
+            ['left', this.parent.offsetWidth + buttonSize * mx + 'px'],
+            ['font-size', buttonSize * 0.5 + 'px'],
+            ['line-height', buttonSize * 0.5 + 'px']
+        ]);        
+    }
+    
+    createButton(id, func, text, mx, my) {
+        let button = Menu.createElement('button', [['id', id]], [], text);
+        Menu.assignListeners(button, [['click', func.bind(this)]]);
+        $('main-container').appendChild(button);
+        this.updateButton(button, mx, my, 4);
+        return button;
     }
 }
