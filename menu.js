@@ -10,18 +10,18 @@ var MenuStates = {
 };
 
 var opts = {
-    lines: 11 // The number of lines to draw
+    lines: 13 // The number of lines to draw
     , length: 0 // The length of each line
-    , width: 50 // The line thickness
+    , width: 35 // The line thickness
     , radius: 84 // The radius of the inner circle
     , scale: 1 // Scales overall size of the spinner
-    , corners: 0.7 // Corner roundness (0..1)
-    , color: '#FFFFFF' // #rgb or #rrggbb or array of colors
-    , opacity: 0.1 // Opacity of the lines
+    , corners: 1 // Corner roundness (0..1)
+    , color: '#FFA500' // #rgb or #rrggbb or array of colors
+    , opacity: 0 // Opacity of the lines
     , rotate: 0 // The rotation offset
     , direction: 1 // 1: clockwise, -1: counterclockwise
     , speed: 1 // Rounds per second
-    , trail: 40 // Afterglow percentage
+    , trail: 60 // Afterglow percentage
     , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
     , zIndex: 2e9 // The z-index (defaults to 2000000000)
     , className: 'spinner' // The CSS class to assign to the spinner
@@ -35,7 +35,7 @@ var opts = {
 class Menu {
 
     constructor(parent, game) {
-        this.nickname = ' ';
+        this.nickname = '';
         this.spinner = new Spinner(opts);
         this.isClicked = true;
         this.parent = parent;
@@ -107,6 +107,8 @@ class Menu {
         this.menuDiv = Menu.createElement('div', [['id', 'menu-div']], [], '');
         this.menuDiv.appendChild(Menu.createElement('label', [['id', 'title-label']], [], 'DOTS CONNECT'));
         let input = Menu.createElement('input', [['id', 'nickname-input'], ['placeholder','nickname']], [], '');
+        if (this.nickname) 
+            input.value = this.nickname;
         this.menuDiv.appendChild(input);
         let button = Menu.createElement('button', [['id', 'new-game-button'], ['class', 'glowEnabledGreen']], [], 'NEW GAME');
         Menu.assignListeners(button, [['click', this.newGameClick.bind(this)]]);
