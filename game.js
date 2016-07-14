@@ -240,7 +240,7 @@ class Game {
                     res += 1;
         let max = 0;
         for (let i = 0; i < this.level.paths.length; ++i)
-            if (this.level.checkPath(this.level.paths[i][0].color))
+            if (this.level.paths[i][0] && this.level.checkPath(this.level.paths[i][0].color))
                 max = Math.max(max, this.level.paths[i].length);
         res += Math.ceil((max * 10) * Math.pow(0.95, this.pathsRestarts));
         return res;
@@ -266,11 +266,11 @@ class Game {
     }
     
     resetLevel() {
-        if (this.isGameFinished)
-            return;
         for (let i = 0; i < this.level.paths.length; ++i)
             this.scene.clearPath(this.cutPath(-1, -1, this.level.paths[i]));
+        $('header').style = 'display: none';
         this.pathsRestarts = 0;
+        this.isGameFinished = false;
         menu.setScore(this.getScore());
     }
 
