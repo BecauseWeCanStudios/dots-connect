@@ -62,6 +62,11 @@ body, #main-container {
     src: url('fonts/pdark.ttf');
 }
 
+@font-face {
+    font-family: 'Cyrillic font';
+    src: url('fonts/aksent.woff');
+}
+
 #title-label, #new-game-button, #score-board-button {
     margin: 5%;
 }
@@ -188,7 +193,7 @@ button.locked {
 
 #new-game-button, #score-board-button, button, #back-button, #title-label, #next-level-button,
     header, #score-label, input {
-    font-family: 'Main font', fantasy;
+    font-family: 'Main font', 'Cyrillic font', fantasy;
 }
 
 #main-scene.fadeIn, header.fadeIn {
