@@ -212,7 +212,7 @@ button.locked {
 
 #new-game-button, #score-board-button, button, #back-button, #title-label, #next-level-button,
     header, #score-label, input, td, #reset-button {
-    font-family: 'Main font', fantasy;
+    font-family: 'Main font', 'Cyrillic font', fantasy;
 }
 
 #main-scene.fadeIn, header.fadeIn {
