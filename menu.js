@@ -163,7 +163,6 @@ class Menu {
                 this.backButton.remove();
                 this.updateLevelButtons();
                 this.levelButtonsDiv.style.opacity = 0;
-                console.log(this.menuDiv);
                 break;
             case MenuStates.GAME:
                 //GameField destroy
@@ -232,6 +231,8 @@ class Menu {
         this.updateScoreLabel();
         this.nextLevelButton = this.createButton('next-level-button', this.nextLevelButtonClick, '→', 1.5, 4);
         this.resetButton = this.createButton('reset-button', this.resetButtonClick, '↺', 1.5, 7);
+        this.nextLevelButton.style.display =
+            (!this.game.levelsCompleted[this.currentLevel] && this.currentLevel < this.levelsCount - 1) ? 'none' : '';
     }
 
     nextLevelButtonClick() {
@@ -242,6 +243,8 @@ class Menu {
         $('header').style = 'display: none';
         Menu.assignListeners(this.game.scene.canvas, [['animationend', this.sceneFadeAnimationEnd.bind(this)]]);
         this.game.scene.canvas.className = 'fadeIn';
+        this.nextLevelButton.style.display =
+            (!this.game.levelsCompleted[this.currentLevel + 1] && this.currentLevel + 1 < this.levelsCount - 1) ? 'none' : '';
     }
 
     updateLevelButtons() {
@@ -330,6 +333,7 @@ class Menu {
         if (this.currentLevel >= this.levelsCount - 1)
             return;
         this.scaleCompletionSign();
+        this.nextLevelButton.style.display = '';
         let pre_score = 0, cur_score = this.game.getScore();
         if (this.userInfo && this.userInfo.levels) {
             if (this.currentLevel < this.userInfo.levels.length) {
@@ -355,8 +359,12 @@ class Menu {
         opts.radius = Math.ceil(this.parent.offsetHeight * 0.20);
         opts.width = Math.ceil(opts.radius * 0.30);
         Menu.tryUpdate(this.menuDiv, this.updateMenuDiv.bind(this));
+        if (this.nextLevelButton) {
+            this.updateButton(this.nextLevelButton, 1.5, 4);
+            this.nextLevelButton.style.display = 
+                (!this.game.levelsCompleted[this.currentLevel] && this.currentLevel < this.levelsCount - 1) ? 'none' : '';
+        }
         this.updateButton(this.backButton, 1.5, 1);
-        this.updateButton(this.nextLevelButton, 1.5, 4);
         this.updateButton(this.resetButton, 1.5, 7);
         Menu.tryUpdate(this.levelButtonsDiv, this.updateLevelButtons.bind(this));
         Menu.tryUpdate(this.scoreLabel, this.updateScoreLabel.bind(this));
