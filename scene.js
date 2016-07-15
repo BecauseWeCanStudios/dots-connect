@@ -125,6 +125,9 @@ class Scene {
         element.addEventListener('click', (e) => {self.onMouseClick(e)}, false);
         element.addEventListener('mouseenter', (e) => {self.onMouseEnter(e)}, false);
         element.addEventListener('mouseleave', (e) => {self.onMouseLeave(e)}, false);
+        element.addEventListener('touchstart', (e) => {self.onTouchStart(e)}, false);
+        element.addEventListener('touchmove', (e) => {self.onTouchMove(e)}, false);
+        element.addEventListener('touchend', (e) => {self.onTouchEnd(e)}, false);
     }
 
     requestAnimationFrame() {
@@ -154,11 +157,23 @@ class Scene {
         this.requestAnimationFrame();
     }
 
-    getMouseCoords(clientX, clientY) {
+    getRelativeCoords(clientX, clientY) {
         let boundrect = this.canvas.getBoundingClientRect();
         let x = (clientX - boundrect.left) / ((boundrect.right - boundrect.left) / this.context.canvas.width);
         let y = (clientY - boundrect.top) / ((boundrect.bottom - boundrect.top) / this.context.canvas.height);
         return [x | 0, y | 0];
+    }
+
+    onManipulatorDown(clientX, clientY) {
+
+    }
+
+    onManipulatorMove(clientX, clientY) {
+
+    }
+
+    onManipulatorUp(clientX, clientY) {
+
     }
 
     // TODO Placeholders
@@ -176,7 +191,7 @@ class Scene {
 
     onMouseMove(e) {
         if (this.debug) {
-            let pos = this.getMouseCoords(e.clientX, e.clientY);
+            let pos = this.getRelativeCoords(e.clientX, e.clientY);
             this.coorDisplay.updateCoords(pos[0], pos[1]);
         }
     }
@@ -190,7 +205,7 @@ class Scene {
     onMouseEnter(e) {
         if (this.debug) {
             this.coorDisplay.updateVisibility(true);
-            let pos = this.getMouseCoords(e.clientX, e.clientY);
+            let pos = this.getRelativeCoords(e.clientX, e.clientY);
             this.coorDisplay.updateCoords(pos[0], pos[1]);
         }
     }
@@ -199,6 +214,18 @@ class Scene {
         if (this.debug) {
             this.coorDisplay.updateVisibility(false);
         }
+    }
+
+    onTouchStart(e) {
+
+    }
+
+    onTouchMove(e) {
+
+    }
+
+    onTouchEnd(e) {
+
     }
 }
 
@@ -433,6 +460,7 @@ class Gamefield extends Scene{
         this.lcX = undefined;
         this.lcY = undefined;
         this.mouseDownInField = false;
+        this.touchID = undefined;
     }
 
     initLevel(level) {
@@ -518,39 +546,88 @@ class Gamefield extends Scene{
         return [x, y];
     }
 
-    onMouseDown(e) {
-        if (e.button != 0) {
+    onManipulatorDown(clientX, clientY) {
+        if (!this.checkBound(clientX, clientY)) {
             return;
         }
-        let pos = this.getMouseCoords(e.clientX, e.clientY)
-        if (!this.checkBound(pos[0], pos[1])) {
-            return;
-        }
-        let cellCoords = this.getCellCoordinates(pos[0], pos[1]);
+        let cellCoords = this.getCellCoordinates(clientX, clientY);
         this.lcX = cellCoords[0];
         this.lcY = cellCoords[1];
         this.mouseDownInField = true;
         this.gm.fieldMouseDown(cellCoords[0], cellCoords[1]);
     }
 
-    onMouseUp(e) {
-        if (e.button != 0) {
-            return;
-        }
+    onManipulatorUp(clientX, clientY) {
         this.lcX = undefined;
         this.lcY = undefined;
         this.mouseDownInField = false;
         this.gm.fieldMouseUp();
     }
 
-    onMouseMove(e) {
-        super.onMouseMove(e);
-        let pos = this.getMouseCoords(e.clientX, e.clientY)
-        let cellCoords = this.getCellCoordinates(pos[0], pos[1], this.lcX, this.lcY);
+    onManipulatorMove(clientX, clientY) {
+        let cellCoords = this.getCellCoordinates(clientX, clientY, this.lcX, this.lcY);
         if (this.mouseDownInField) {
             this.lcX = cellCoords[0];
             this.lcY = cellCoords[1];
         }
         this.gm.fieldMouseMove(cellCoords[0], cellCoords[1]);
+    }
+
+    onTouchStart(e) {
+        if (!this.touchID) {
+            this.touchID = e.touches[0].identifier;
+        }
+        let pos = this.getRelativeCoords(e.touches[0].clientX, e.touches[0].clientY);
+        this.onManipulatorDown(pos[0], pos[1]);
+    }
+
+    onTouchMove(e) {
+        let curtouchnum;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier == this.touchID) {
+                curtouchnum = i;
+            }
+        }
+        if (!isDef(curtouchnum)) {
+            return;
+        }
+        let pos = this.getRelativeCoords(e.touches[curtouchnum].clientX, e.touches[curtouchnum].clientY);
+        this.onManipulatorMove(pos[0], pos[1]);
+    }
+
+    onTouchEnd(e) {
+        let curtouchnum;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier == this.touchID) {
+                curtouchnum = i;
+            }
+        }
+        if (!isDef(curtouchnum)) {
+            return;
+        }
+        this.touchID = undefined;
+        let pos = this.getRelativeCoords(e.changedTouches[curtouchnum].clientX, e.changedTouches[curtouchnum].clientY);
+        this.onManipulatorUp(pos[0], pos[1]);
+    }
+
+    onMouseDown(e) {
+        if (e.button != 0) {
+            return;
+        }
+        let pos = this.getRelativeCoords(e.clientX, e.clientY);
+        this.onManipulatorDown(pos[0], pos[1]);
+    }
+
+    onMouseMove(e) {
+        let pos = this.getRelativeCoords(e.clientX, e.clientY);
+        this.onManipulatorMove(pos[0], pos[1]);
+    }
+
+    onMouseUp(e) {
+        if (e.button != 0) {
+            return;
+        }
+        let pos = this.getRelativeCoords(e.clientX, e.clientY)
+        this.onManipulatorUp(pos[0], pos[1]);
     }
 }
