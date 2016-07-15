@@ -191,10 +191,27 @@ class Menu {
     animationEnd() {
         this.isClicked = false;
     }
+
+    stopWaiting() {
+        if (!this.waitingForInfo)
+            return;
+        this.waitingForInfo = false;
+        this.spinner.stop();
+        this.userInfo = {totalScore: 0, levels: []};
+        this.setScore(0);
+        this.game.clearCompletedLevels();
+        this.updateScoreLabel();
+        if (this.state == MenuStates.LEVEL_SELECT)
+            this.createLevelButtons();
+        else
+            this.createMenuDiv();
+    }
     
     menuDivTransitionEnd() {
         this.menuDiv.remove();
         this.spinner.spin($('main-container'));
+        this.waitingForInfo = true;
+        setTimeout(() => {this.stopWaiting()}, 30000);
         if (this.state == MenuStates.LEVEL_SELECT)
             leaderboard.getUserInfo(this.nickname, this.onGetUserInfo.bind(this));
         else 
@@ -291,11 +308,14 @@ class Menu {
     }
 
     onGetUserInfo(nickname, userInfo) {
+        if (!this.waitingForInfo)
+            return;
         if (!userInfo) {
             leaderboard.addUser(this.nickname);
             leaderboard.getUserInfo(this.nickname, this.onGetUserInfo.bind(this));
             return;
         }
+        this.waitingForInfo = false;
         this.spinner.stop();
         this.userInfo = userInfo;
         this.nickname = nickname;
@@ -318,7 +338,7 @@ class Menu {
             input.className = 'wrongInput';
             return;
         }
-       input.className = '';
+        input.className = '';
         this.backButton = this.createButton('back-button', this.backButtonClick, '↩', 1.5, 1);
         window.document.cookie = JSON.stringify({nickname: this.nickname});
         this.menuDiv.style.opacity = 0;
@@ -388,6 +408,9 @@ class Menu {
     }
     
     onGetLeaderboard(leaderboardData) {
+        if (!this.waitingForInfo)
+            return;
+        this.waitingForInfo = false;
         this.spinner.stop();
         this.createLeaderboardDiv(leaderboardData);
     }
