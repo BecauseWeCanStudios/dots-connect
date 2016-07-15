@@ -490,7 +490,7 @@ class Menu {
             if (this.currentLevel < this.levelsCount - 1)
                 this.scoreLabel.innerHTML = 'LVL ' + (this.currentLevel + 1) + s + ' SCORE: ' + score;
             else
-                this.scoreLabel.innerHTML = 'RANDOM SCORE: ' + score;
+                this.scoreLabel.innerHTML = 'RANDOM LVL SCORE: ' + score;
         }
         else 
             this.scoreLabel.innerHTML = this.nickname + ' SCORE: ' + score;
